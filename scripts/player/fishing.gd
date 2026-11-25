@@ -71,6 +71,8 @@ var _nibble_timer := 0.0
 var _bite_total := BITE_WINDOW
 var _cast_rod_slot: Dictionary = {}
 var _cast_bait: StringName = &""
+var _throw_t := -1.0
+var _hook_t := -1.0
 
 
 func _ready() -> void:
@@ -225,6 +227,7 @@ func _cast() -> void:
 			land.y = Terrain.WATER_Y
 
 	state = State.FLYING
+	_throw_t = 0.0
 	Sfx.play("cast", player.global_position, -4.0)
 	var start: Vector3 = player.get_rod_tip()
 	bobber.global_position = start
@@ -286,6 +289,7 @@ func _hook() -> void:
 		_finish("Наживка с этого заброса закончилась — закинь снова", Color.ORANGE)
 		return
 	state = State.FIGHT
+	_hook_t = 0.0
 	var flat := _land_pos - player.global_position
 	flat.y = 0.0
 	start_distance = maxf(flat.length(), CATCH_DISTANCE + 1.0)
@@ -483,6 +487,8 @@ func _finish(message: String, color: Color) -> void:
 	_hooked_fish = null
 	_cast_rod_slot = {}
 	_cast_bait = &""
+	_throw_t = -1.0
+	_hook_t = -1.0
 	bobber.visible = false
 
 
@@ -558,3 +564,60 @@ func _draw_line() -> void:
 		var t := float(i) / SEGMENTS
 		_imesh.surface_add_vertex(a.lerp(b, t) + Vector3.DOWN * sin(t * PI) * sag)
 	_imesh.surface_end()
+
+
+## Анимация рук от первого лица и вращение ручки катушки. Вызывается из игрока после его кадра.
+func apply_hand_anim(delta: float) -> void:
+	if not player.is_multiplayer_authority() or player.third_person:
+		_spin_reel(player.model, delta)
+		return
+	if _throw_t >= 0.0:
+		_throw_t += delta
+		if _throw_t > 0.45:
+			_throw_t = -1.0
+	if _hook_t >= 0.0:
+		_hook_t += delta
+		if _hook_t > 0.35:
+			_hook_t = -1.0
+	var hand: Node3D = player.fp_hand
+	var rot := Vector3.ZERO
+	match state:
+		State.CHARGING:
+			var c := charge
+			rot = Vector3(0.85 + c * 0.55, 0.18, 0.22)
+		State.FLYING:
+			var u := clampf(_throw_t / 0.16, 0.0, 1.0) if _throw_t >= 0.0 else 1.0
+			if u < 1.0:
+				rot = Vector3(lerpf(1.3, -1.05, u), lerpf(0.2, -0.12, u), lerpf(0.2, -0.1, u))
+			else:
+				var rest := clampf((_throw_t - 0.16) / 0.28, 0.0, 1.0) if _throw_t >= 0.0 else 1.0
+				rot = Vector3(lerpf(-1.05, -0.15, rest), lerpf(-0.12, 0.0, rest), 0.0)
+		State.WAITING:
+			rot = Vector3(-0.12 + sin(_time * 1.6) * 0.03, 0.0, 0.0)
+		State.BITE:
+			rot = Vector3(-0.1, sin(_time * 18.0) * 0.12, 0.0)
+		State.FIGHT:
+			if _hook_t >= 0.0 and _hook_t < 0.22:
+				var j := sin(clampf(_hook_t / 0.22, 0.0, 1.0) * PI)
+				rot = Vector3(-0.85 * j, 0.0, 0.15 * j)
+			else:
+				var pump := sin(_time * 7.0) * 0.18
+				rot = Vector3(-0.2 + pump, 0.0, 0.05)
+		_:
+			rot = Vector3.ZERO
+	var k := minf(delta * 14.0, 1.0)
+	hand.rotation = hand.rotation.lerp(rot, k)
+	_spin_reel(player._fp_item, delta)
+	_spin_reel(player.model, delta)
+
+
+func _spin_reel(from: Node, delta: float) -> void:
+	if from == null:
+		return
+	var crank := from.find_child("ReelCrank", true, false) as Node3D
+	if crank == null:
+		return
+	if state == State.FIGHT and reeling:
+		crank.rotate_x(delta * 14.0)
+	elif state == State.FIGHT:
+		crank.rotate_x(delta * 3.5)

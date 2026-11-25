@@ -307,9 +307,11 @@ func _update_fp_item() -> void:
 			"rod":
 				_fp_item.rotation = Vector3(-0.8, 0, 0.05)
 				_fp_item.position = Vector3(0.06, -0.55, 0.3)
-				_fp_rod_tip = Marker3D.new()
-				_fp_rod_tip.position = Vector3(0, 2.2, 0)
-				_fp_item.add_child(_fp_rod_tip)
+				_fp_rod_tip = _fp_item.find_child("RodTip", true, false) as Marker3D
+				if _fp_rod_tip == null:
+					_fp_rod_tip = Marker3D.new()
+					_fp_rod_tip.position = Vector3(0, 2.2, 0)
+					_fp_item.add_child(_fp_rod_tip)
 			"weapon":
 				_fp_item.rotation = Vector3(-0.5, 0.2, -0.3)
 				_fp_item.position = Vector3(0.05, -0.25, 0.1)
@@ -816,7 +818,7 @@ func _show_goal(at: Vector3) -> void:
 	Art.add_mesh(_goal_marker, Art.cyl(0.05, 0.05, 3.0, 6), Art.color(Color(0.4, 0.3, 0.2)), Vector3(0, 1.5, 0))
 	Art.add_mesh(_goal_marker, Art.box(Vector3(0.9, 0.55, 0.02)), Build.glow_mat(Color(1.0, 0.25, 0.15), 1.5), Vector3(0.45, 2.7, 0))
 	Art.add_mesh(_goal_marker, Art.cyl(0.4, 0.4, 40.0, 8), Build.glow_mat(Color(1.0, 0.5, 0.2, 0.25), 0.8), Vector3(0, 20.0, 0))
-	Build.text(_goal_marker, Vector3(0, 3.4, 0), "ФИНИШ СПОРА", 60, Color(1, 0.8, 0.3), 0.008, 0.0, true).no_depth_test = true
+	Build.text(_goal_marker, Vector3(0, 3.4, 0), "ФИНИШ СПОРА", 40, Color(1, 0.8, 0.3), 0.005, 0.0, true).no_depth_test = true
 
 
 func _tick_dispute(delta: float) -> void:
@@ -1431,6 +1433,7 @@ func _process(delta: float) -> void:
 	# Внешний вид — у всех, кто видит этого игрока.
 	model.drunk = drunk / 100.0
 	model.stinky = stinky > 0.0
+	model.fish_state = fish_state
 	model.pose = pose
 	var flat := global_position - _last_pos
 	flat.y = 0.0
@@ -1517,7 +1520,9 @@ func _process(delta: float) -> void:
 		head.position.y = lerpf(head.position.y, hy, delta * 6.0)
 		if _action == "poop":
 			head.position.x = sin(_t * 30.0) * 0.008
-	if _action == "drink" or _action == "smoke":
+	if fishing.is_busy():
+		fishing.apply_hand_anim(delta)
+	elif _action == "drink" or _action == "smoke":
 		fp_hand.rotation.x = lerpf(fp_hand.rotation.x, -0.5, delta * 10.0)
 	elif _action != "swing" and _action != "punch":
 		fp_hand.rotation = fp_hand.rotation.lerp(Vector3.ZERO, minf(delta * 10.0, 1.0))

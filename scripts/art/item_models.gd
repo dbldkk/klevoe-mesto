@@ -37,18 +37,82 @@ static func _rod(root: Node3D, id: StringName, cond: float) -> void:
 	var r := GameData.get_rod(id)
 	var c := r.color if r else Color.TAN
 	var broken := cond <= 0.0
-	Art.add_mesh(root, Art.cyl(0.02, 0.024, 0.32, 8), Art.color(Color(0.55, 0.4, 0.25), 0.9), Vector3(0, 0.16, 0))
-	Art.add_mesh(root, Art.cyl(0.06, 0.06, 0.04, 12), Art.color(Color(0.25, 0.25, 0.27), 0.4, 0.6),
-		Vector3(0.05, 0.38, 0), Vector3(0, 0, PI / 2))
-	Art.add_mesh(root, Art.cyl(0.012, 0.012, 0.08, 6), Art.color(Color(0.2, 0.2, 0.2)), Vector3(0.09, 0.4, 0.03), Vector3(PI / 2, 0, 0))
+	var heavy := id == &"sea" or id == &"feeder"
+	var bamboo := id == &"bamboo"
+	var handle_h := 0.30 if heavy else 0.26
+	var blank_len := 1.55 if bamboo else (1.9 if heavy else 1.75)
+	var butt_r := 0.018 if heavy else (0.014 if bamboo else 0.012)
+	var tip_r := 0.0045 if bamboo else 0.0035
+	# Рукоять
+	var cork := Art.color(Color(0.62, 0.48, 0.28) if bamboo else Color(0.72, 0.6, 0.4), 0.95)
+	Art.add_mesh(root, Art.cyl(butt_r + 0.004, butt_r + 0.006, handle_h, 10), cork, Vector3(0, handle_h * 0.5, 0))
+	Art.add_mesh(root, Art.cyl(butt_r + 0.007, butt_r + 0.007, 0.018, 10),
+		Art.color(Color(0.15, 0.14, 0.13), 0.5, 0.4), Vector3(0, 0.012, 0))
+	# Катушкодержатель
+	var seat_y := handle_h + 0.02
+	Art.add_mesh(root, Art.cyl(butt_r + 0.002, butt_r, 0.05, 8),
+		Art.color(Color(0.35, 0.36, 0.38), 0.4, 0.55), Vector3(0, seat_y, 0))
+	_reel(root, Vector3(0, seat_y + 0.01, 0), heavy, not bamboo)
+	# Хлыст
+	var blank_y := seat_y + 0.04 + blank_len * 0.5
+	var tip := Marker3D.new()
+	tip.name = "RodTip"
 	if broken:
-		Art.add_mesh(root, Art.cyl(0.012, 0.018, 1.0, 6), Art.color(c, 0.5), Vector3(0, 0.82, 0))
-		Art.add_mesh(root, Art.cyl(0.006, 0.012, 0.9, 6), Art.color(c, 0.5), Vector3(0.25, 1.55, 0), Vector3(0, 0, -0.9))
+		Art.add_mesh(root, Art.cyl(tip_r * 2.0, butt_r, blank_len * 0.55, 8), Art.color(c, 0.45),
+			Vector3(0, seat_y + 0.04 + blank_len * 0.275, 0))
+		Art.add_mesh(root, Art.cyl(tip_r, tip_r * 2.0, blank_len * 0.45, 8), Art.color(c, 0.45),
+			Vector3(0.22, seat_y + 0.08 + blank_len * 0.7, 0), Vector3(0, 0, -0.85))
+		tip.position = Vector3(0.22, seat_y + 0.08 + blank_len * 0.7, 0)
+		root.add_child(tip)
 	else:
-		Art.add_mesh(root, Art.cyl(0.006, 0.018, 1.9, 6), Art.color(c, 0.5), Vector3(0, 1.27, 0))
-		for k in 4:
-			Art.add_mesh(root, Art.cyl(0.012, 0.012, 0.01, 6), Art.color(Color(0.8, 0.8, 0.8), 0.3, 0.7),
-				Vector3(0.015, 0.6 + k * 0.45, 0))
+		Art.add_mesh(root, Art.cyl(tip_r, butt_r, blank_len, 8), Art.color(c, 0.35),
+			Vector3(0, blank_y, 0))
+		# Кольца-пропускники
+		var guides := 6 if heavy else (5 if not bamboo else 4)
+		var chrome := Art.color(Color(0.82, 0.84, 0.86), 0.25, 0.8)
+		for k in guides:
+			var t := (k + 1) / float(guides + 1)
+			t *= t  # чаще к вершинке
+			var y := seat_y + 0.08 + blank_len * t
+			var rr := lerpf(butt_r, tip_r, t)
+			Art.add_mesh(root, Art.cyl(rr + 0.007, rr + 0.007, 0.005, 8), chrome, Vector3(0, y, 0.01))
+			Art.add_mesh(root, Art.cyl(rr + 0.011, rr + 0.009, 0.003, 8), chrome,
+				Vector3(0, y, 0.013), Vector3(PI / 2, 0, 0))
+		# Тюльпан на кончике
+		var tip_y := seat_y + 0.04 + blank_len
+		Art.add_mesh(root, Art.cyl(0.006, 0.005, 0.008, 8), chrome, Vector3(0, tip_y, 0.004))
+		tip.position = Vector3(0, tip_y + 0.01, 0)
+		root.add_child(tip)
+
+
+
+
+static func _reel(root: Node3D, at: Vector3, heavy: bool, spinning: bool) -> void:
+	var body_col := Art.color(Color(0.18, 0.18, 0.2) if spinning else Color(0.35, 0.28, 0.18), 0.45, 0.55)
+	var spool_col := Art.color(Color(0.55, 0.58, 0.6), 0.35, 0.65)
+	var scale := 1.2 if heavy else (1.0 if spinning else 0.85)
+	var cx := at.x + 0.045 * scale
+	var cy := at.y
+	# Лапка
+	Art.add_mesh(root, Art.box(Vector3(0.05 * scale, 0.012, 0.012)), body_col, at + Vector3(0.02 * scale, 0, 0))
+	# Корпус
+	Art.add_mesh(root, Art.cyl(0.028 * scale, 0.03 * scale, 0.034 * scale, 12), body_col,
+		Vector3(cx, cy, 0), Vector3(0, 0, PI / 2))
+	# Шпуля
+	Art.add_mesh(root, Art.cyl(0.022 * scale, 0.022 * scale, 0.028 * scale, 12), spool_col,
+		Vector3(cx + 0.01 * scale, cy, 0), Vector3(0, 0, PI / 2))
+	# Дужка / ротор
+	Art.add_mesh(root, Art.cyl(0.003, 0.003, 0.05 * scale, 6), body_col,
+		Vector3(cx, cy + 0.03 * scale, 0), Vector3(0, 0, 0.4))
+	# Ручка катушки — крутится при подмотке
+	var crank := Node3D.new()
+	crank.name = "ReelCrank"
+	crank.position = Vector3(cx, cy, 0)
+	root.add_child(crank)
+	Art.add_mesh(crank, Art.cyl(0.003, 0.003, 0.055 * scale, 6), body_col,
+		Vector3(0, 0.028 * scale, 0), Vector3(0, 0, PI / 2))
+	Art.add_mesh(crank, Art.sphere(0.01 * scale, 8), Art.color(Color(0.12, 0.12, 0.12), 0.6),
+		Vector3(0.028 * scale, 0.028 * scale, 0))
 
 
 static func _bottle(root: Node3D, d: DrinkData) -> void:

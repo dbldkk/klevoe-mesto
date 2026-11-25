@@ -36,6 +36,8 @@ const FACE_NAMES := ["Обычное", "Весёлое", "Небритое", "С
 ## "idle", "fish", "drink", "eat", "swim", "crouch", "pee", "ko", "sit", "talk", "phone",
 ## "sleep", "swing", "punch", "smoke", "bait", "carry"
 var pose: String = "idle"
+var fish_state: int = 0
+var _last_fish_state: int = -1
 var speed: float = 0.0
 var drunk: float = 0.0
 var stinky: bool = false
@@ -284,9 +286,11 @@ func set_held(kind: String, id: StringName, cond: float = 100.0) -> void:
 		"rod":
 			_held.rotation = Vector3(-PI / 2 + 0.5, 0, 0)
 			_held.position = Vector3(0, 0, 0.15)
-			_rod_tip = Marker3D.new()
-			_rod_tip.position = Vector3(0, 2.2, 0)
-			_held.add_child(_rod_tip)
+			_rod_tip = _held.find_child("RodTip", true, false) as Marker3D
+			if _rod_tip == null:
+				_rod_tip = Marker3D.new()
+				_rod_tip.position = Vector3(0, 2.2, 0)
+				_held.add_child(_rod_tip)
 		"weapon":
 			_held.rotation = Vector3(-PI / 2 + 0.3, 0, 0)
 			_held.position = Vector3(0, 0, 0.1)
@@ -310,6 +314,31 @@ func set_carry(on: bool, kind := "box") -> void:
 		_box = ItemModels.build(kind, &"box")
 		_box.position = Vector3(0, 0.12, -0.38)
 		spine.add_child(_box)
+
+
+
+## Позы ловли по синхронизированному fish_state (0 простой заброс, 1 зарядка, 2 бросок, …).
+func _fish_arms(tgt: Dictionary) -> void:
+	# 0 idle / 1 charge / 2 flying / 3 waiting / 4 bite / 5 fight
+	match fish_state:
+		1:
+			tgt.arm_r = 2.4; tgt.elbow_r = 0.9; tgt.arm_l = 1.6; tgt.elbow_l = 1.1
+			tgt.arm_rz = -0.4; tgt.spine_x = -0.15; tgt.spine_y = 0.25
+		2:
+			var u := clampf(_pose_t / 0.18, 0.0, 1.0)
+			tgt.arm_r = lerpf(2.5, 0.7, u); tgt.elbow_r = lerpf(1.0, 0.25, u)
+			tgt.arm_l = lerpf(1.6, 0.7, u); tgt.elbow_l = 0.7
+			tgt.spine_y = lerpf(0.3, -0.2, u)
+		4:
+			tgt.arm_r = 1.0 + sin(_t * 16.0) * 0.25; tgt.elbow_r = 0.7
+			tgt.arm_l = 0.9; tgt.elbow_l = 0.9; tgt.arm_lz = 0.35
+		5:
+			var pump := sin(_t * 7.0)
+			tgt.arm_r = 1.15 + pump * 0.25; tgt.elbow_r = 0.85 - pump * 0.25
+			tgt.arm_l = 1.0; tgt.elbow_l = 1.0; tgt.arm_lz = 0.4
+			tgt.spine_x = 0.08
+		_:
+			tgt.arm_r = 1.0; tgt.elbow_r = 0.6; tgt.arm_l = 0.8; tgt.elbow_l = 0.9; tgt.arm_lz = 0.35
 
 
 func get_rod_tip() -> Vector3:
@@ -341,6 +370,9 @@ func _process(delta: float) -> void:
 	if pose != _last_pose:
 		_last_pose = pose
 		_pose_t = 0.0
+	if fish_state != _last_fish_state:
+		_last_fish_state = fish_state
+		_pose_t = 0.0
 	_pose_t += delta
 	_update_materials()
 	var amp := clampf(speed / 4.5, 0.0, 1.3)
@@ -357,7 +389,7 @@ func _process(delta: float) -> void:
 	}
 	match pose:
 		"fish":
-			tgt.arm_r = 1.0; tgt.elbow_r = 0.6; tgt.arm_l = 0.8; tgt.elbow_l = 0.9; tgt.arm_lz = 0.35
+			_fish_arms(tgt)
 		"drink":
 			tgt.arm_r = 2.5; tgt.elbow_r = 1.9; tgt.head_x = -0.4
 		"eat":
@@ -402,7 +434,7 @@ func _process(delta: float) -> void:
 			tgt.hips_y = 0.5; tgt.leg_l = 1.5; tgt.leg_r = 1.5; tgt.knee_l = -1.5; tgt.knee_r = -1.5
 		"sit_fish":
 			tgt.hips_y = 0.5; tgt.leg_l = 1.5; tgt.leg_r = 1.5; tgt.knee_l = -1.5; tgt.knee_r = -1.5
-			tgt.arm_r = 1.0; tgt.elbow_r = 0.6; tgt.arm_l = 0.8; tgt.elbow_l = 0.9; tgt.arm_lz = 0.35
+			_fish_arms(tgt)
 		"row":
 			var r := sin(_t * 3.0)
 			tgt.hips_y = 0.5; tgt.leg_l = 1.4; tgt.leg_r = 1.4; tgt.knee_l = -1.3; tgt.knee_r = -1.3
