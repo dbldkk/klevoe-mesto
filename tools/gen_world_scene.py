@@ -309,7 +309,7 @@ for i in range(4):
 for x in (-0.25,0.25):
     csg(f"Side{int(x>0)}",f"{P}/Ladder",(x,-0.1,0),(0.04,1.4,0.04),"metal",False)
 talk_area(f"{P}/Ladder",0.0,"LadderShape")
-label("RentSign",P,(1.4,1.4,-1.0),"ПРОКАТ ЛОДОК · 150 ₽",48,"Color(1, 0.9, 0.4, 1)",False,0.006,-1.5708)
+# Вывеска проката ставится из World._place_pier_sign() — доска на столбе, не огромный Label3D.
 
 # ---------------- Шестёрочка (16 x 11)
 S="Shop"
@@ -338,7 +338,7 @@ for side,x0 in (("A",-3.6),("B",3.6)):
         csg(f"Shelf{side}_{k}",S,(x0,y,-4.7),(6.4,0.04,0.55),"shelf", k==0)
     csg(f"Shelf{side}_side0",S,(x0-3.2,1.1,-4.7),(0.05,2.2,0.55),"shelf",True)
     csg(f"Shelf{side}_side1",S,(x0+3.2,1.1,-4.7),(0.05,2.2,0.55),"shelf",True)
-label("SignDrinks",S,(0,2.65,-4.9),"АЛКОГОЛЬ",70,"Color(1, 0.85, 0.5, 1)",False,0.006)
+label("SignDrinks",S,(0,2.65,-4.9),"АЛКОГОЛЬ",44,"Color(1, 0.85, 0.5, 1)",False,0.004)
 items=[]
 for (x0,ids) in ((-3.6,["beer","strong_beer","cider"]),(3.6,["port","wine","vodka"])):
     for k,iid in enumerate(ids):
@@ -350,7 +350,7 @@ for (x0,ids) in ((-3.6,["beer","strong_beer","cider"]),(3.6,["port","wine","vodk
 csg("LeftShelf",S,(-7.5,1.1,-1.0),(0.08,2.2,7),"shelf",False)
 for k,y in enumerate([0.1,0.7,1.3,1.9]):
     csg(f"LeftShelf_{k}",S,(-7.25,y,-1.0),(0.55,0.04,7),"shelf",k==0)
-label("SignFood",S,(-7.4,2.65,-1.0),"НАЖИВКА · ПРОДУКТЫ",60,"Color(0.8, 1, 0.7, 1)",False,0.005,1.5708)
+label("SignFood",S,(-7.4,2.65,-1.0),"НАЖИВКА · ПРОДУКТЫ",40,"Color(0.8, 1, 0.7, 1)",False,0.0038,1.5708)
 rows=[[("bait","bread"),("bait","corn"),("bait","worm")],[("bait","maggot"),("bait","dough"),("bait","sausage")],[("food","noodles"),("food","crackers"),("food","cheburek")]]
 for k,row in enumerate(rows):
     for j,(kind,iid) in enumerate(row):
@@ -362,10 +362,10 @@ items.append(("food","noodles",(1.2,1.0,-0.5),0,7,0.14))
 items.append(("tool","flashlight",(0,1.0,-0.45),0,3,0.12))
 items.append(("misc","sugar",(-1.1,1.0,-0.85),3,5,0.15))
 items.append(("misc","yeast",(1.0,1.0,-0.85),3,6,0.11))
-label("SignSale",S,(0,2.35,-0.5),"АКЦИЯ!",60,"Color(1, 0.3, 0.2, 1)",True,0.006)
+label("SignSale",S,(0,2.35,-0.5),"АКЦИЯ!",36,"Color(1, 0.3, 0.2, 1)",True,0.004)
 # Удочки на правой стене
 csg("RodRack",S,(7.7,1.3,-2.15),(0.08,2.6,4.9),"wood",False)
-label("SignRods",S,(7.6,2.95,-2.3),"РЫБАЛКА · ОХОТА",56,"Color(0.7, 0.85, 1, 1)",False,0.005,-1.5708)
+label("SignRods",S,(7.6,2.95,-2.3),"РЫБАЛКА · ОХОТА",40,"Color(0.7, 0.85, 1, 1)",False,0.0038,-1.5708)
 for j,iid in enumerate(["bamboo","telescopic","spinning","carbon","feeder","sea"]):
     items.append(("rod",iid,(7.4,0,-4.35+j*0.72),2,2 if iid!="sea" else 1,0.18))
 items.append(("weapon","bat",(7.4,0.05,0.0),2,2,0.2))
@@ -375,7 +375,7 @@ csg("Counter",S,(5.9,0.5,3.2),(0.8,1.0,2.8),"red")
 csg("CounterTop",S,(5.9,1.02,3.2),(0.9,0.05,2.9),"shelf",False)
 csg("Register",S,(6.0,1.2,3.3),(0.4,0.3,0.5),"metal",False)
 csg("CashBack",S,(7.75,1.5,3.2),(0.06,1.4,2.6),"red",False)
-label("SignCash",S,(7.7,2.95,3.2),"КАССА",64,"Color(1, 1, 1, 1)",False,0.006,-1.5708)
+label("SignCash",S,(7.7,2.95,3.2),"КАССА",40,"Color(1, 1, 1, 1)",False,0.004,-1.5708)
 items.append(("drink","cognac",(5.75,1.05,2.25),2,3,0.14))
 items.append(("smoke","cigs",(5.75,1.05,4.25),2,4,0.08))
 items.append(("food","shawarma",(5.75,1.05,3.8),2,1,0.15))
@@ -387,7 +387,7 @@ for n,(kind,iid,pos,r,f,sp) in enumerate(items):
 node("Cashier","Node3D",S,['position = Vector3(7.05, 0, 3.2)','rotation = Vector3(0, 1.5708, 0)','script = ExtResource("s_cashier")'])
 model(f"{S}/Cashier", shirt=C(0.75,0.15,0.2), pants=C(0.2,0.2,0.25), hat=0, hair_color=C(0.55,0.2,0.1), face_name='"cashier"', height_scale=0.95)
 talk_area(f"{S}/Cashier")
-label("Name",f"{S}/Cashier",(0,2.1,0),"Зина",40,"Color(1, 1, 1, 0.8)",True)
+label("Name",f"{S}/Cashier",(0,2.1,0),"Зина",36,"Color(1, 1, 1, 0.8)",True,0.0055)
 node("Book","Node3D",S,['position = Vector3(-6.2, 0, 3.8)','script = ExtResource("s_book")'])
 talk_area(f"{S}/Book",0.7,"BookShape")
 node("Guard","CharacterBody3D",S,['position = Vector3(-3.6, 0.05, 4.3)','collision_layer = 8','collision_mask = 5','script = ExtResource("s_guard")'])

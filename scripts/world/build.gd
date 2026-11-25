@@ -207,6 +207,41 @@ static func text(parent: Node3D, pos: Vector3, txt: String, size := 48, color :=
 	return l
 
 
+## Табличка на доске (и столбе): читается с дорожки, не заслоняет камеру.
+## Высота букв ограничена, текст подгоняется под ширину доски.
+static func board_sign(parent: Node3D, pos: Vector3, txt: String, rot_y := 0.0,
+		board_size := Vector2(1.05, 0.46), post_h := 1.55,
+		color := Color(1.0, 0.92, 0.55), with_post := true) -> Node3D:
+	var root := Node3D.new()
+	root.name = "BoardSign"
+	root.position = pos
+	root.rotation.y = rot_y
+	parent.add_child(root)
+	var wood := Art.tex_world("planks", 0.8)
+	var dark := Art.color(Color(0.28, 0.2, 0.12), 0.9)
+	if with_post:
+		cylinder(root, Vector3(0, post_h * 0.5, 0), 0.035, post_h, dark, true, 8)
+	var face_y := post_h if with_post else 0.0
+	# Рамка чуть больше самой доски.
+	block(root, Vector3(0, face_y, 0), Vector3(board_size.x + 0.05, board_size.y + 0.05, 0.03), dark, false)
+	block(root, Vector3(0, face_y, 0.012), Vector3(board_size.x, board_size.y, 0.03), wood, true)
+	var px := 0.0032
+	var font := 36
+	var max_h := board_size.y * 0.52
+	var max_w := board_size.x * 0.9
+	while font * px > max_h and font > 16:
+		font -= 2
+	while float(txt.length()) * float(font) * px * 0.58 > max_w and px > 0.0016:
+		px *= 0.9
+	var front := text(root, Vector3(0, face_y, 0.032), txt, font, color, px)
+	front.outline_size = 8
+	var back := text(root, Vector3(0, face_y, -0.02), txt, font, color, px, PI)
+	back.outline_size = 8
+	root.set_meta("sign_font", font)
+	root.set_meta("sign_px", px)
+	return root
+
+
 ## Лампа. night_only — включается только вечером (уличные фонари).
 static func lamp(parent: Node3D, pos: Vector3, energy := 1.2, rng := 8.0, color := Color(1, 0.9, 0.75),
 		night_only := false) -> OmniLight3D:

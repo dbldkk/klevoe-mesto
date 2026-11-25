@@ -130,7 +130,7 @@ func _bar() -> void:
 		it.position = Vector3(5.0 + j * 1.5, 1.6, -6.7)
 		add_child(it)
 	Build.block(self, Vector3(6.5, 1.58, -6.7), Vector3(5.0, 0.04, 0.4), wood, false)
-	Build.text(self, Vector3(6.5, 2.6, -6.85), "БАР", 80, Color(1, 0.8, 0.4), 0.007)
+	Build.board_sign(self, Vector3(6.5, 2.55, -6.82), "БАР", 0.0, Vector2(0.7, 0.32), 0.0, Color(1, 0.85, 0.45), false)
 	for x in [-6.0, 6.0]:
 		Build.block(self, Vector3(x, 0.4, 3.0), Vector3(1.2, 0.8, 1.2), Art.color(Color(0.3, 0.05, 0.08), 0.6), true)
 

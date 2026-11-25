@@ -45,7 +45,7 @@ func _garage() -> void:
 			Build.block(self, Vector3(x, 1.2, z), Vector3(0.12, 2.4, 0.12), post, true)
 	Build.block(self, Vector3(0, 2.45, 0), Vector3(4.5, 0.1, 6.0), metal, false, Vector3(0.05, 0, 0))
 	Build.block(self, Vector3(0, 1.2, -2.75), Vector3(4.2, 2.4, 0.08), metal, true)
-	Build.text(self, Vector3(0, 2.75, 3.0), "ПРОКАТ «НИВЫ» · 300 ₽", 56, Color(1, 0.9, 0.4), 0.007)
+	Build.board_sign(self, Vector3(0, 0.0, 3.15), "ПРОКАТ «НИВЫ» · 300 ₽", 0.0, Vector2(1.15, 0.44), 2.15, Color(1, 0.9, 0.4))
 	Build.cylinder(self, Vector3(-1.6, 0.45, -2.2), 0.3, 0.9, Art.color(Color(0.2, 0.35, 0.6), 0.6, 0.3), true, 12)
 	Build.block(self, Vector3(1.6, 0.25, -2.3), Vector3(0.3, 0.5, 0.18), Art.color(Color(0.7, 0.15, 0.1), 0.5), true)
 	Build.lamp(self, Vector3(0, 2.2, 0), 1.0, 7.0, Color(1, 0.9, 0.7), true)

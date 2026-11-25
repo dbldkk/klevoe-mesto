@@ -18,12 +18,25 @@ func _ready() -> void:
 	Net.server_lost.connect(_on_server_lost)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	Settings.apply_world.call_deferred()
+	_place_pier_sign()
 	_bake_static()
 
 
 ## Оптимизация: склеиваем неподвижные кусочки построек, деревьев и улицы (см. MeshBaker).
 const BAKE := ["Decor", "Street", "Shop", "Casino", "LiquorStore", "House", "Club", "Farm", "PoliceStation",
 	"Market", "Garage", "BusStop", "RepairJob", "Babka", "InspectorPost", "Pier", "Thimbles"]
+
+
+
+## Табличка проката лодок — на столбе сбоку у берегового края пирса, не в кадре заброса.
+func _place_pier_sign() -> void:
+	var pier := get_node_or_null("Pier") as Node3D
+	if pier == null:
+		return
+	var old := pier.get_node_or_null("RentSign")
+	if old:
+		old.queue_free()
+	Build.board_sign(pier, Vector3(1.9, 0.0, 3.4), "ПРОКАТ ЛОДОК · 150 ₽", -PI / 2.0)
 
 
 func _bake_static() -> void:
