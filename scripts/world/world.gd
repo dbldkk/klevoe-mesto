@@ -18,6 +18,7 @@ func _ready() -> void:
 	radial.name = "RadialMenu"
 	add_child(radial)
 	_spawn_officers()
+	_spawn_village()
 	spawner.add_spawnable_scene(PLAYER_SCENE_PATH)
 	Net.player_registered.connect(_on_player_registered)
 	Net.server_lost.connect(_on_server_lost)
@@ -29,7 +30,8 @@ func _ready() -> void:
 
 ## Оптимизация: склеиваем неподвижные кусочки построек, деревьев и улицы (см. MeshBaker).
 const BAKE := ["Decor", "Street", "Shop", "Casino", "LiquorStore", "House", "Club", "Farm", "PoliceStation",
-	"Market", "Garage", "BusStop", "RepairJob", "Babka", "InspectorPost", "Pier", "Thimbles"]
+	"Market", "Garage", "BusStop", "RepairJob", "Babka", "InspectorPost", "Pier", "Thimbles",
+	"VillageLife/Static", "StripClub/Static"]
 
 
 
@@ -93,6 +95,27 @@ func _on_server_lost() -> void:
 	Events.ui_open = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().reload_current_scene()
+
+
+func _spawn_village() -> void:
+	if get_node_or_null("VillageLife") != null:
+		return
+	var life := Node3D.new()
+	life.name = "VillageLife"
+	life.set_script(preload("res://scripts/world/places/village_life.gd"))
+	add_child(life)
+	var bus := Node3D.new()
+	bus.name = "VillageBus"
+	bus.set_script(preload("res://scripts/world/village_bus.gd"))
+	add_child(bus)
+	var club := Node3D.new()
+	club.name = "StripClub"
+	club.set_script(preload("res://scripts/world/places/strip_club.gd"))
+	add_child(club)
+	var board := Node3D.new()
+	board.name = "MemorialBoard"
+	board.set_script(preload("res://scripts/world/places/memorial_board.gd"))
+	add_child(board)
 
 
 func _spawn_officers() -> void:

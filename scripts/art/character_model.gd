@@ -5,7 +5,7 @@ extends Node3D
 ##
 ## Снаружи задают: speed (м/с), pose, drunk (0..1), stinky, set_face(), set_held(), apply_skin().
 
-enum Hat { NONE, CAP, BEANIE, USHANKA, BALD }
+enum Hat { NONE, CAP, BEANIE, USHANKA, BALD, BANGS }
 
 ## Палитры для выбора скина в меню.
 const SHIRTS := [Color(0.3, 0.45, 0.3), Color(0.6, 0.22, 0.18), Color(0.2, 0.32, 0.6), Color(0.62, 0.52, 0.18),
@@ -17,9 +17,10 @@ const SKINS := [Color(0.95, 0.79, 0.66), Color(0.88, 0.68, 0.52), Color(0.72, 0.
 	Color(1.0, 0.86, 0.76)]
 const HAT_COLORS := [Color(0.2, 0.22, 0.25), Color(0.65, 0.14, 0.1), Color(0.25, 0.38, 0.2), Color(0.2, 0.3, 0.6),
 	Color(0.85, 0.75, 0.2), Color(0.4, 0.3, 0.2), Color(0.9, 0.9, 0.9)]
-const HAT_NAMES := ["Без шапки", "Кепка", "Шапка", "Ушанка", "Лысый"]
+const HAT_NAMES := ["Без шапки", "Кепка", "Шапка", "Ушанка", "Лысый", "Чёлка"]
 const FACES := ["neutral", "smile", "player_b", "angry"]
 const FACE_NAMES := ["Обычное", "Весёлое", "Небритое", "Суровое"]
+const OUTFIT_NAMES := ["Обычный", "Друг из общаги"]
 
 @export var skin: Color = Color(0.93, 0.76, 0.62)
 @export var shirt: Color = Color(0.3, 0.45, 0.3)
@@ -29,6 +30,7 @@ const FACE_NAMES := ["Обычное", "Весёлое", "Небритое", "С
 @export var hat_color: Color = Color(0.2, 0.22, 0.25)
 @export var hair_color: Color = Color(0.3, 0.2, 0.12)
 @export var face_name: String = "neutral"
+@export var outfit: int = 0   ## 0 обычный, 1 открытая цветочная рубашка и тёмные трусы
 @export var fat: bool = false
 @export var height_scale: float = 1.0
 @export var stripes: bool = false        ## тельняшка
@@ -75,7 +77,7 @@ func _ready() -> void:
 	_build()
 
 
-## Скин из словаря профиля: {shirt, pants, skin, hat, hat_color, face, stripes}
+## Скин из словаря профиля: {shirt, pants, skin, hat, hat_color, face, stripes, outfit}
 func apply_skin(d: Dictionary) -> void:
 	shirt = SHIRTS[clampi(int(d.get("shirt", 0)), 0, SHIRTS.size() - 1)]
 	pants = PANTS[clampi(int(d.get("pants", 0)), 0, PANTS.size() - 1)]
@@ -84,6 +86,10 @@ func apply_skin(d: Dictionary) -> void:
 	hat_color = HAT_COLORS[clampi(int(d.get("hat_color", 0)), 0, HAT_COLORS.size() - 1)]
 	face_name = FACES[clampi(int(d.get("face", 0)), 0, FACES.size() - 1)]
 	stripes = bool(d.get("stripes", false))
+	outfit = clampi(int(d.get("outfit", 0)), 0, OUTFIT_NAMES.size() - 1)
+	if outfit == 1:
+		hair_color = Color(0.16, 0.10, 0.07)
+		shoes = Color(0.12, 0.10, 0.09)
 	restyle()
 
 
@@ -105,16 +111,36 @@ func _build() -> void:
 	var shoe_m := Art.color(shoes, 0.6)
 
 	hips = _pivot(self, Vector3(0, 0.9, 0))
-	Art.add_mesh(hips, Art.capsule(0.13, 0.4), pants_m, Vector3(0, 0.0, 0), Vector3(0, 0, PI / 2), Vector3(1, 1, 0.85))
-	# ремень с пряжкой
-	var belt := Art.color(Color(0.14, 0.1, 0.08), 0.5)
-	Art.add_mesh(hips, Art.cyl(0.2, 0.2, 0.05, 14), belt, Vector3(0, 0.08, 0), Vector3.ZERO, Vector3(1.0, 1, 0.66))
-	Art.add_mesh(hips, Art.box(Vector3(0.06, 0.045, 0.02)), Art.color(Color(0.75, 0.7, 0.5), 0.3, 0.8), Vector3(0, 0.08, -0.135))
+	var boxers := outfit == 1
+	Art.add_mesh(hips, Art.capsule(0.13, 0.4), Art.color(Color(0.07, 0.07, 0.08), 0.9) if boxers else pants_m, Vector3(0, 0.0, 0), Vector3(0, 0, PI / 2), Vector3(1, 1, 0.85))
+	# ремень с пряжкой (не для короткого белья)
+	if not boxers:
+		var belt := Art.color(Color(0.14, 0.1, 0.08), 0.5)
+		Art.add_mesh(hips, Art.cyl(0.2, 0.2, 0.05, 14), belt, Vector3(0, 0.08, 0), Vector3.ZERO, Vector3(1.0, 1, 0.66))
+		Art.add_mesh(hips, Art.box(Vector3(0.06, 0.045, 0.02)), Art.color(Color(0.75, 0.7, 0.5), 0.3, 0.8), Vector3(0, 0.08, -0.135))
 
+	var shorts_m := Art.color(Color(0.07, 0.07, 0.08), 0.9)
+	var waist_m := Art.color(Color(0.92, 0.92, 0.93), 0.7)
+	if boxers:
+		Art.add_mesh(hips, Art.cyl(0.2, 0.2, 0.05, 12), waist_m, Vector3(0, 0.06, 0))
 	for side in [-1, 1]:
 		var leg := _pivot(hips, Vector3(side * 0.1, -0.05, 0))
+		var knee: Node3D
+		if boxers:
+			Art.add_mesh(leg, Art.capsule(0.09, 0.28), shorts_m, Vector3(0, -0.1, 0))
+			knee = _pivot(leg, Vector3(0, -0.42, 0))
+			Art.add_mesh(knee, Art.capsule(0.07, 0.44), skin_m, Vector3(0, -0.2, 0))
+			# простые тёмные тапки, без логотипов
+			Art.add_mesh(knee, Art.box(Vector3(0.12, 0.03, 0.24)), Art.color(Color(0.1, 0.1, 0.1), 0.9), Vector3(0, -0.43, -0.04))
+			if side < 0:
+				leg_l = leg
+				knee_l = knee
+			else:
+				leg_r = leg
+				knee_r = knee
+			continue
 		Art.add_mesh(leg, Art.capsule(0.085, 0.46), pants_m, Vector3(0, -0.2, 0))
-		var knee := _pivot(leg, Vector3(0, -0.42, 0))
+		knee = _pivot(leg, Vector3(0, -0.42, 0))
 		Art.add_mesh(knee, Art.capsule(0.075, 0.44), pants_m, Vector3(0, -0.2, 0))
 		Art.add_mesh(knee, Art.cyl(0.082, 0.082, 0.05, 10), pants_m, Vector3(0, -0.33, 0))   # отворот штанины
 		# ботинок: подошва, верх, круглый носок
@@ -129,20 +155,31 @@ func _build() -> void:
 			knee_r = knee
 
 	spine = _pivot(hips, Vector3(0, 0.08, 0))
-	var torso_m: Material = shirt_m
-	if stripes:
+	var floral := outfit == 1
+	var floral_m: Material = Art.floral(2.2) if floral else shirt_m
+	var torso_m: Material = skin_m if floral else shirt_m
+	if stripes and not floral:
 		torso_m = _striped(shirt)
+	if floral:
+		shirt_m = floral_m
 	Art.add_mesh(spine, Art.capsule(0.22, 0.64), torso_m, Vector3(0, 0.28, 0), Vector3.ZERO, Vector3(1.05, 1, 0.68))
 	# плечи — чтобы руки не «торчали» из коробки
 	for sd in [-1.0, 1.0]:
-		Art.add_mesh(spine, Art.sphere(0.095, 10), torso_m, Vector3(sd * 0.24, 0.5, 0), Vector3.ZERO, Vector3(1, 0.85, 1))
-	# воротник и пуговицы
-	var collar := Art.color(shirt.darkened(0.25), 0.85)
-	Art.add_mesh(spine, Art.cyl(0.1, 0.13, 0.06, 12), collar, Vector3(0, 0.58, 0.0))
-	for k in 3:
-		Art.add_mesh(spine, Art.sphere(0.012, 6), Art.color(shirt.darkened(0.45), 0.5), Vector3(0, 0.46 - k * 0.11, -0.152))
-	# карман на груди
-	Art.add_mesh(spine, Art.box(Vector3(0.09, 0.08, 0.01)), collar, Vector3(0.1, 0.43, -0.148))
+		Art.add_mesh(spine, Art.sphere(0.095, 10), skin_m if floral else torso_m, Vector3(sd * 0.24, 0.5, 0), Vector3.ZERO, Vector3(1, 0.85, 1))
+	if floral:
+		# расстёгнутая короткая рубашка с цветочным принтом, грудь открыта
+		for sd in [-1.0, 1.0]:
+			var panel := Art.add_mesh(spine, Art.box(Vector3(0.16, 0.55, 0.04)), floral_m, Vector3(sd * 0.14, 0.3, -0.02), Vector3(0, sd * 0.55, sd * 0.15))
+			panel.name = "FloralShirt"
+		Art.add_mesh(spine, Art.box(Vector3(0.34, 0.06, 0.16)), floral_m, Vector3(0, 0.56, 0.0))  # ворот
+	else:
+		# воротник и пуговицы
+		var collar := Art.color(shirt.darkened(0.25), 0.85)
+		Art.add_mesh(spine, Art.cyl(0.1, 0.13, 0.06, 12), collar, Vector3(0, 0.58, 0.0))
+		for k in 3:
+			Art.add_mesh(spine, Art.sphere(0.012, 6), Art.color(shirt.darkened(0.45), 0.5), Vector3(0, 0.46 - k * 0.11, -0.152))
+		# карман на груди
+		Art.add_mesh(spine, Art.box(Vector3(0.09, 0.08, 0.01)), collar, Vector3(0.1, 0.43, -0.148))
 	if fat:
 		Art.add_mesh(spine, Art.sphere(0.21, 12), torso_m, Vector3(0, 0.16, -0.08), Vector3.ZERO, Vector3(1.1, 0.9, 0.9))
 
@@ -168,10 +205,14 @@ func _build() -> void:
 
 	for side in [-1, 1]:
 		var arm := _pivot(spine, Vector3(side * 0.27, 0.5, 0))
-		Art.add_mesh(arm, Art.capsule(0.07, 0.34), shirt_m if not stripes else torso_m, Vector3(0, -0.14, 0))
+		var sleeve_m: Material = floral_m if floral else (shirt_m if not stripes else torso_m)
+		Art.add_mesh(arm, Art.capsule(0.07, 0.34), sleeve_m, Vector3(0, -0.14, 0))
 		var elbow := _pivot(arm, Vector3(0, -0.29, 0))
-		Art.add_mesh(elbow, Art.capsule(0.06, 0.3), shirt_m if not stripes else torso_m, Vector3(0, -0.12, 0))
-		Art.add_mesh(elbow, Art.cyl(0.065, 0.06, 0.05, 10), Art.color(shirt.darkened(0.2), 0.85), Vector3(0, -0.25, 0))   # манжет
+		if floral:
+			Art.add_mesh(elbow, Art.capsule(0.06, 0.3), skin_m, Vector3(0, -0.12, 0))
+		else:
+			Art.add_mesh(elbow, Art.capsule(0.06, 0.3), shirt_m if not stripes else torso_m, Vector3(0, -0.12, 0))
+			Art.add_mesh(elbow, Art.cyl(0.065, 0.06, 0.05, 10), Art.color(shirt.darkened(0.2), 0.85), Vector3(0, -0.25, 0))   # манжет
 		# кисть: ладонь + большой палец
 		Art.add_mesh(elbow, Art.box(Vector3(0.075, 0.1, 0.05)), skin_m, Vector3(0, -0.32, 0))
 		Art.add_mesh(elbow, Art.sphere(0.04, 8), skin_m, Vector3(0, -0.375, -0.005), Vector3.ZERO, Vector3(0.95, 0.8, 0.7))
@@ -204,6 +245,15 @@ func _build_hat() -> void:
 			Art.add_mesh(head, Art.box(Vector3(0.3, 0.07, 0.04)), Art.color(hat_color.lightened(0.2)), Vector3(0, 0.35, -0.21))
 		Hat.BALD:
 			pass
+		Hat.BANGS:
+			var hm2 := Art.color(hair_color, 0.9)
+			Art.add_mesh(head, Art.sphere(0.215, 14), hm2, Vector3(0, 0.26, 0.02), Vector3.ZERO, Vector3(1.05, 0.78, 1.08))
+			# растрёпанная чёлка на глаза
+			Art.add_mesh(head, Art.box(Vector3(0.22, 0.08, 0.08)), hm2, Vector3(-0.02, 0.28, -0.16), Vector3(0.35, 0.1, 0))
+			Art.add_mesh(head, Art.box(Vector3(0.1, 0.1, 0.05)), hm2, Vector3(0.08, 0.24, -0.18), Vector3(0.6, -0.2, 0.2))
+			Art.add_mesh(head, Art.box(Vector3(0.09, 0.11, 0.05)), hm2, Vector3(-0.1, 0.25, -0.17), Vector3(0.5, 0.15, -0.15))
+			for side in [-1, 1]:
+				Art.add_mesh(head, Art.box(Vector3(0.05, 0.14, 0.08)), hm2, Vector3(side * 0.18, 0.16, 0.0))
 		_:
 			Art.add_mesh(head, Art.sphere(0.205, 14), Art.color(hair_color, 0.9), Vector3(0, 0.24, 0.02), Vector3.ZERO, Vector3(1.02, 0.7, 1.0))
 	_apply_lod()

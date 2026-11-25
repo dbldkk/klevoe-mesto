@@ -6,8 +6,8 @@ const RADIUS := 168.0
 const BTN := Vector2(132, 92)
 
 const ACTIONS := [
-	{ "id": "pee", "title": "Малая нужда", "hint": "когда прижмёт" },
-	{ "id": "poop", "title": "Большая нужда", "hint": "когда прижмёт" },
+	{ "id": "pee", "title": "Обоссаться", "hint": "когда прижмёт" },
+	{ "id": "poop", "title": "Обосраться", "hint": "когда прижмёт" },
 	{ "id": "toast", "title": "Тост", "hint": "нужна бутылка" },
 	{ "id": "gift", "title": "Угостить", "hint": "посмотри на человека" },
 	{ "id": "flashlight", "title": "Фонарик", "hint": "из «Шестёрочки»" },

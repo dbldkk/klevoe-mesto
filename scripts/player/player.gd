@@ -1326,7 +1326,7 @@ func enter_hide(spot: Node3D, inside: Vector3, look_yaw: float) -> void:
 	_apply_camera_mode()
 	var hint := "Сидишь в укрытии. E — вылезти"
 	if spot.get("kind") == "outhouse":
-		hint += ". Здесь можно культурно сходить в туалет (N / M)"
+		hint += ". Здесь можно культурно сходить в туалет (Q)"
 	Events.notify(hint, Color(0.75, 0.9, 0.75))
 
 

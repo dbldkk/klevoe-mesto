@@ -14,7 +14,8 @@ var _skin_labels: Dictionary = {}
 
 ## Что можно менять во внешности: ключ, подпись, сколько вариантов.
 const SKIN_OPTS := [["shirt", "Куртка"], ["pants", "Штаны"], ["skin", "Кожа"], ["hat", "Голова"],
-	["hat_color", "Цвет шапки"], ["face", "Лицо"], ["stripes", "Тельняшка"]]
+	["hat_color", "Цвет шапки"], ["face", "Лицо"], ["stripes", "Тельняшка"], ["outfit", "Образ"]]
+const FRIEND_SKIN := {"shirt": 7, "pants": 1, "skin": 0, "hat": 5, "hat_color": 5, "face": 0, "stripes": 0, "outfit": 1}
 
 
 func _ready() -> void:
@@ -254,6 +255,11 @@ func _build_skin() -> Control:
 	right.add_child(UiKit.button("Случайно", func() -> void:
 		for o in SKIN_OPTS:
 			Saves.skin[o[0]] = randi() % _skin_count(o[0])
+		Saves.skin["outfit"] = 0
+		_skin_changed(), 15))
+	right.add_child(UiKit.button("Друг из общаги", func() -> void:
+		for k in FRIEND_SKIN:
+			Saves.skin[k] = FRIEND_SKIN[k]
 		_skin_changed(), 15))
 	_skin_changed.call_deferred()
 	return h
@@ -267,6 +273,7 @@ func _skin_count(key: String) -> int:
 		"hat": return CharacterModel.HAT_NAMES.size()
 		"hat_color": return CharacterModel.HAT_COLORS.size()
 		"face": return CharacterModel.FACES.size()
+		"outfit": return CharacterModel.OUTFIT_NAMES.size()
 	return 2
 
 
@@ -275,12 +282,16 @@ func _skin_word(key: String, v: int) -> String:
 		"hat": return CharacterModel.HAT_NAMES[v]
 		"face": return CharacterModel.FACE_NAMES[v]
 		"stripes": return "да" if v == 1 else "нет"
+		"outfit": return CharacterModel.OUTFIT_NAMES[v]
 	return "№%d" % (v + 1)
 
 
 func _skin_step(key: String, d: int) -> void:
 	var n := _skin_count(key)
 	Saves.skin[key] = (int(Saves.skin.get(key, 0)) + d + n) % n
+	if key == "outfit" and int(Saves.skin["outfit"]) == 1:
+		for k in FRIEND_SKIN:
+			Saves.skin[k] = FRIEND_SKIN[k]
 	_skin_changed()
 
 

@@ -55,6 +55,8 @@ var foods: Array[FoodData] = [
 	preload("res://data/food/cheburek.tres"),
 	preload("res://data/food/shawarma.tres"),
 	preload("res://data/food/seeds.tres"),
+	preload("res://data/food/mushroom.tres"),
+	preload("res://data/food/berry.tres"),
 ]
 
 ## Бита и сигареты.

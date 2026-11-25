@@ -22,7 +22,14 @@ const ROOFS := [["house", Vector2(9, 7), Color(0.62, 0.22, 0.18), "Дом"],
 	["garage", Vector2(4.5, 6.0), Color(0.5, 0.52, 0.56), "Прокат «Нивы»"],
 	["police", Vector2(7, 6), Color(0.2, 0.35, 0.65), "Опорный пункт"],
 	["farm", Vector2(10, 7), Color(0.6, 0.3, 0.22), "Совхоз «Рассвет»"],
-	["club", Vector2(11, 6), Color(0.75, 0.2, 0.15), "Клуб «Огонёк»"]]
+	["club", Vector2(11, 6), Color(0.75, 0.2, 0.15), "Клуб «Огонёк»"],
+	["garages", Vector2(8, 5), Color(0.45, 0.45, 0.4), "Гаражный кооператив"],
+	["ruins", Vector2(7, 5), Color(0.5, 0.42, 0.32), "Заброшенный колхоз"],
+	["chapel", Vector2(4, 3.5), Color(0.7, 0.6, 0.3), "Часовня"],
+	["dachas", Vector2(7, 5), Color(0.4, 0.55, 0.3), "Дачи"],
+	["forest", Vector2(8, 7), Color(0.2, 0.4, 0.2), "Лесная тропа"],
+	["campfire", Vector2(3, 3), Color(0.85, 0.45, 0.15), "Костёр рыбаков"],
+	["strip_club", Vector2(7, 5.5), Color(0.75, 0.2, 0.55), "Клуб «Неон»"]]
 
 var _tex: ImageTexture
 var _canvas: Control

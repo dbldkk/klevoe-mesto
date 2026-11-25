@@ -191,6 +191,14 @@ static func _food(root: Node3D, id: StringName) -> void:
 			Art.add_mesh(root, Art.cyl(0.042, 0.042, 0.08, 12), Art.color(Color(0.95, 0.95, 0.95), 0.4), Vector3(0, 0.04, 0))
 		&"seeds":
 			Art.add_mesh(root, Art.box(Vector3(0.1, 0.14, 0.03)), Art.label("seeds"), Vector3(0, 0.07, 0))
+		&"mushroom":
+			Art.add_mesh(root, Art.cyl(0.012, 0.02, 0.06, 8), Art.color(Color(0.85, 0.8, 0.7)), Vector3(0, 0.03, 0))
+			Art.add_mesh(root, Art.sphere(0.05, 10), Art.color(Color(0.7, 0.35, 0.18)), Vector3(0, 0.07, 0), Vector3.ZERO, Vector3(1.1, 0.55, 1.1))
+		&"berry":
+			for i in 5:
+				var a := i * TAU / 5.0
+				Art.add_mesh(root, Art.sphere(0.018, 8), Art.color(Color(0.55, 0.1, 0.15)), Vector3(cos(a) * 0.03, 0.03, sin(a) * 0.03))
+			Art.add_mesh(root, Art.sphere(0.02, 8), Art.color(Color(0.2, 0.45, 0.15)), Vector3(0, 0.05, 0))
 
 
 static func _bat(root: Node3D) -> void:

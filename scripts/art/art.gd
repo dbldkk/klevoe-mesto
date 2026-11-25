@@ -79,6 +79,47 @@ static func label(name: String) -> StandardMaterial3D:
 
 
 ## Лицо (прозрачная картинка поверх головы).
+
+## Процедурная цветочная рубашка (белый фон, красные/жёлтые/синие цветы). Без логотипов.
+static func floral(uv_scale := 1.0) -> StandardMaterial3D:
+	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.93, 0.90, 0.86, 1.0))
+	# стебли и мелкие цветы
+	for i in 18:
+		var rng := int(i * 17 + 29)
+		var cx := (rng * 13) % 64
+		var cy := (rng * 29) % 64
+		var col: Color
+		match i % 3:
+			0: col = Color(0.78, 0.16, 0.18)
+			1: col = Color(0.90, 0.72, 0.14)
+			_: col = Color(0.18, 0.32, 0.72)
+		_flower(img, cx, cy, 4 + (i % 3), col)
+	var tex := ImageTexture.create_from_image(img)
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = tex
+	m.uv1_scale = Vector3(uv_scale, uv_scale, uv_scale)
+	m.roughness = 0.82
+	return m
+
+
+static func _flower(img: Image, cx: int, cy: int, r: int, col: Color) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	for p in 6:
+		var ang := p * TAU / 6.0
+		var px := int(cx + cos(ang) * r)
+		var py := int(cy + sin(ang) * r)
+		for dy in range(-2, 3):
+			for dx in range(-2, 3):
+				if dx * dx + dy * dy <= 4:
+					img.set_pixel(posmod(px + dx, w), posmod(py + dy, h), col)
+	var mid := Color(0.95, 0.85, 0.2)
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			img.set_pixel(posmod(cx + dx, w), posmod(cy + dy, h), mid)
+
+
 static func face(name: String) -> StandardMaterial3D:
 	var key := "f:" + name
 	if _cache.has(key):
