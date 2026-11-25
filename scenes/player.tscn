@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/player/fishing.gd" id="2_fishing"]
 [ext_resource type="Script" path="res://scripts/world/delegate_interactable.gd" id="3_delegate"]
 [ext_resource type="Script" path="res://scripts/art/character_model.gd" id="4_model"]
+[ext_resource type="Script" path="res://scripts/player/follow_cam.gd" id="5_follow"]
 
 [sub_resource type="CapsuleShape3D" id="Shape_body"]
 radius = 0.35
@@ -112,13 +113,14 @@ near = 0.03
 position = Vector3(0.32, -0.32, -0.42)
 
 [node name="SpringArm3D" type="SpringArm3D" parent="Head"]
-position = Vector3(0.5, 0.35, 0)
-collision_mask = 1
-spring_length = 4.0
-margin = 0.2
+position = Vector3(0, 0.18, 0)
+collision_mask = 5
+spring_length = 3.8
+margin = 0.35
 
 [node name="TPCamera" type="Camera3D" parent="Head/SpringArm3D"]
 fov = 70.0
+script = ExtResource("5_follow")
 
 [node name="InteractArea" type="Area3D" parent="."]
 script = ExtResource("3_delegate")

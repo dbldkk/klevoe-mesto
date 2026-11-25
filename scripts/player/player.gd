@@ -250,6 +250,21 @@ func _apply_camera_mode() -> void:
 	fp_hand.visible = not third_person and not sleeping and not hidden
 
 
+func _exclude_vehicle_from_camera(v: Node3D, on: bool) -> void:
+	if v == null:
+		return
+	var nodes: Array = [v]
+	nodes.append_array(v.find_children("*", "CollisionObject3D", true, false))
+	for n in nodes:
+		if not (n is CollisionObject3D):
+			continue
+		var rid: RID = (n as CollisionObject3D).get_rid()
+		if on:
+			spring_arm.add_excluded_object(rid)
+		else:
+			spring_arm.remove_excluded_object(rid)
+
+
 func look_dir() -> Vector3:
 	var cam := fp_camera if not third_person else tp_camera
 	return -cam.global_basis.z
@@ -1609,6 +1624,7 @@ func enter_vehicle(v: Node3D, s: int) -> void:
 	seat = s
 	vehicle_path = str(v.get_path())
 	_seat_yaw = 0.0
+	_exclude_vehicle_from_camera(v, true)
 	collision.disabled = true
 	velocity = Vector3.ZERO
 	swimming = false
@@ -1621,6 +1637,7 @@ func exit_vehicle(into_water: bool) -> void:
 		return
 	var v := vehicle
 	var p: Vector3 = v.exit_point(seat)
+	_exclude_vehicle_from_camera(v, false)
 	vehicle = null
 	seat = -1
 	vehicle_path = ""
