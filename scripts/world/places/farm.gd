@@ -33,8 +33,7 @@ func _ready() -> void:
 	_fence()
 	_valya = Build.person(self, Vector3(1.2, 0, 3.2), 0.0, {"shirt": 3, "pants": 1, "skin": 1, "hat": 2, "hat_color": 1, "face": 1}, "seller")
 	_valya.rotation.y = PI
-	Chatter.attach.call_deferred(_valya, "f", ["Работа есть! Мешки таскать или Зорьку пасти.", "Зорька у нас с характером — глаз да глаз.",
-		"Пьяным к корове не подходи, она чует!", "Молоко парное — только для работников."], 2.55, 5.0)
+	Chatter.attach.call_deferred(_valya, "f", SpeechBank.valya(), 2.55, 5.0)
 	Build.text(self, Vector3(1.2, 2.0, 3.2), "Тётя Валя", 36, Color(1, 0.9, 0.85), 0.006, 0.0, true)
 	_valya_speech = Build.text(self, Vector3(1.2, 2.35, 3.2), "", 34, Color(1, 1, 0.8), 0.006, 0.0, true)
 	Build.talk_area(self, Vector3(1.2, 0.9, 3.2), Vector3(1.2, 1.8, 1.2), _Valya.new(self))

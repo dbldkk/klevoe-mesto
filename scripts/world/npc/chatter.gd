@@ -10,6 +10,7 @@ var height := 2.35
 var _label: Label3D
 var _cool := 0.0
 var _last := -1
+var _bag: Array = []
 var _check := 0.0
 var _was_near := false
 var condition: Callable = Callable()   ## если задано — говорит, только когда вернёт true
@@ -60,14 +61,29 @@ func _process(delta: float) -> void:
 
 func speak(text := "") -> void:
 	if text == "":
-		var i := randi() % lines.size()
-		if i == _last and lines.size() > 1:
-			i = (i + 1) % lines.size()
-		_last = i
-		var l = lines[i]
-		text = l.call() if l is Callable else String(l)
+		text = _next_line()
+		if text == "":
+			return
 	_label.text = text
 	_label.modulate.a = 1.0
-	_cool = randf_range(25.0, 40.0)
-	_global_until = Time.get_ticks_msec() / 1000.0 + 4.0
+	_cool = randf_range(32.0, 55.0)
+	_global_until = Time.get_ticks_msec() / 1000.0 + 5.0
 	Sfx.say((get_parent() as Node3D).global_position + Vector3.UP * (height - 0.6), voice, text)
+
+
+func _next_line() -> String:
+	if lines.is_empty():
+		return ""
+	for _try in lines.size() + 2:
+		if _bag.is_empty():
+			_bag = range(lines.size())
+			_bag.shuffle()
+			if _last >= 0 and _bag.size() > 1 and int(_bag[0]) == _last:
+				_bag.append(_bag.pop_front())
+		var i: int = int(_bag.pop_front())
+		_last = i
+		var l = lines[i]
+		var text: String = String(l.call()) if l is Callable else String(l)
+		if text != "":
+			return text
+	return ""

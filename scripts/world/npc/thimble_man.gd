@@ -28,8 +28,7 @@ var _prev := Vector3.ZERO
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "m", ["Подходи, не стесняйся! Крути-верти — денежку бери!", "Где шарик? Угадаешь — удвою!",
-		"Глаз — алмаз? Сейчас проверим!", "Честная игра, мамой клянусь!"], 2.3, 6.0)
+	Chatter.attach.call_deferred(self, "m", SpeechBank.thimble(), 2.3, 6.0)
 	add_to_group("npc")
 	_post = position
 	_post_rot = rotation.y

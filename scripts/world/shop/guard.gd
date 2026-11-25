@@ -55,8 +55,7 @@ var _punch_t := 0.0
 
 
 func _ready() -> void:
-	var ch := Chatter.attach(self, "m_low", ["Корзину не забудь оплатить, я слежу.", "Без чека не выпущу, имей в виду.",
-		"Михалыч всё видит. Даже то, чего нет.", "Слыхал? У меня скоро свадьба! В клубе «Огонёк», приходи."], 2.3, 4.0)
+	var ch := Chatter.attach(self, "m_low", SpeechBank.mikhalych(), 2.3, 4.0)
 	ch.condition = func() -> bool: return state == State.WATCH or state == State.PHONE
 	add_to_group("npc")
 	_rng.randomize()

@@ -142,8 +142,9 @@ func _build_party() -> void:
 		_guests.append(g)
 		if i == 1 or i == 4:
 			var ch := Chatter.attach(g, "m" if i == 1 else "m_low", [func() -> String:
-				return ["Горько! Горько!", "За молодых!", "Михалыч, ну ты даёшь, женился!", "А невеста-то красавица!"].pick_random() \
-					if kind == K.WEDDING else ["Хороший был мужик, дед Егор…", "Он такого леща однажды вытащил — во!", "Помянем. Не чокаясь."].pick_random()], 2.3, 5.0)
+				if kind == K.WEDDING:
+					return ["Ну, дай бог им. Жить бы поспокойнее, чем мы.", "Михалыч, гляди не передумай к утру.", "Невеста держится, а он волнуется — так и видно."].pick_random()
+				return ["Егор-то хороший был. С плёса без рыбы редко приходил.", "Помянем тихо, без лишнего.", "Он леща такого вытащил однажды — сам рассказывал, не хвастал."].pick_random()], 2.3, 5.0)
 			ch.condition = func() -> bool: return kind != K.NONE
 	_bride = Build.person(_deco, Vector3(-0.3, 0, -0.35), 0.0, {"shirt": 7, "pants": 5, "skin": 4, "hat": 0}, "smile")
 	Art.add_mesh(_bride, Art.cyl(0.32, 0.5, 0.9, 12), Art.color(Color(0.98, 0.98, 0.98), 0.6), Vector3(0, 0.45, 0))   # платье

@@ -19,8 +19,7 @@ func get_prompt(_player: Node) -> String:
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "f", ["Касса свободна, подходите!", "Пакет нужен? Пять рублей.",
-		"Мелочь есть? Сдачи нет.", "Акция: вторая водка… тоже за деньги."], 2.2, 4.0)
+	Chatter.attach.call_deferred(self, "f", SpeechBank.zina(), 2.2, 4.0)
 	add_to_group("npc")
 
 

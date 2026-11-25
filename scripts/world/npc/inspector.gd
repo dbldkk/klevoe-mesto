@@ -32,8 +32,7 @@ var _spd := 0.0
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "m_low", ["Рыбоохрана! Сети есть? Показывай садок.", "На плёсе браконьеров развелось — гляди у меня!",
-		"Удочкой лови сколько хочешь. А сеть — изыму.", "Говорят, Царь-сом опять кого-то утянул… Враньё, наверное."], 3.2, 16.0)
+	Chatter.attach.call_deferred(self, "m_low", SpeechBank.semenych(), 3.2, 16.0)
 	add_to_group("inspector")
 	add_to_group("npc")
 	_build_route()
