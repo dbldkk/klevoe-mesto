@@ -67,6 +67,12 @@ func _run() -> void:
 	Inventory._auto_bait()
 	Inventory.changed.disconnect(bait_listener)
 	check(observed_bait.back() == &"worm", "HUD notified after automatic bait switch")
+	# v1.0: radial menu binding and speech bank.
+	check(InputMap.has_action("radial") and Controls.key_label("radial") != "—",
+		"radial menu is bound to a key")
+	check(SpeechBank.zoya().size() >= 5 and SpeechBank.tolya().size() >= 4, "villagers have several dialogue lines")
+	check(InputMap.action_get_events("pee").is_empty() and InputMap.action_get_events("poop").is_empty(),
+		"toilet keys were moved off the keyboard into the radial menu")
 	# v0.9: rod model, modest signs, camera collision.
 	var bamboo := ItemModels.build("rod", &"bamboo")
 	add_child(bamboo)
@@ -158,6 +164,43 @@ func _run() -> void:
 	Events.ui_open = true
 	fishing._update_local(0.01)
 	check(fishing.state == FishingController.State.IDLE, "opening UI cancels charging instead of casting")
+	Events.ui_open = false
+	# v1.0: radial menu, officers, spoon digging.
+	var radial := get_tree().get_first_node_in_group("radial_menu")
+	check(radial != null, "radial menu is in the world")
+	if radial:
+		radial.open()
+		check(Events.ui_open and radial.visible, "opening the radial menu captures the cursor")
+		Inventory.bladder = 0.0
+		radial.refresh()
+		check(not radial.is_enabled("pee"), "toilet action is greyed out when not needed")
+		Inventory.bladder = 50.0
+		radial.refresh()
+		check(radial.is_enabled("pee"), "toilet action is available when needed")
+		radial.close()
+		check(not Events.ui_open and not radial.visible, "closing the radial menu returns control")
+	check(get_tree().get_nodes_in_group("district_officer").size() >= 3, "three district officers spawned")
+	var in_yard := 0
+	var decor := get_tree().get_first_node_in_group("decor")
+	if decor:
+		for c in decor.get_children():
+			if c is Node3D and Layout.spot_contains("police", c.global_position.x, c.global_position.z, 2.0):
+				in_yard += 1
+	for h in get_tree().get_nodes_in_group("hiding_spot"):
+		if h is Node3D and Layout.spot_contains("police", h.global_position.x, h.global_position.z, 2.0):
+			in_yard += 1
+	check(in_yard == 0, "police yard has no bushes or trees")
+	var j0: float = player.jail_left()
+	player.go_to_jail(60.0, player.global_position, player.global_position, "проверка", false)
+	check(player.is_jailed() and player.jail_left() > 50.0, "player can be sent to jail")
+	var j1: float = player.jail_left()
+	player.apply_dig_stroke()
+	check(player.jail_left() < j1, "digging with a spoon reduces remaining jail time")
+	var j2: float = player.jail_left()
+	player.jail_caught_digging()
+	check(player.jail_left() > j2, "a watching officer adds jail time")
+	player._release_from_jail()
+	check(not player.is_jailed(), "release clears the jail sentence")
 	var original_file := Saves.world_file
 	Saves.world_file = "missing/subdirectory"
 	await Net.exit_to_menu()
