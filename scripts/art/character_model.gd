@@ -41,6 +41,9 @@ const LINGERIE_COLORS := [Color(0.08, 0.07, 0.08), Color(0.48, 0.08, 0.14), Colo
 
 ## "idle", "fish", "drink", "eat", "swim", "crouch", "pee", "ko", "sit", "talk", "phone",
 ## "sleep", "swing", "punch", "smoke", "bait", "carry"
+## Если true, каждый кадр подтягивает position.y к 0 (ноги на полу родителя).
+## Выключить, если персонаж стоит на возвышении (сцена, пилон и т.п.).
+var settle_floor: bool = true
 var pose: String = "idle"
 var fish_state: int = 0
 var _last_fish_state: int = -1
@@ -137,9 +140,11 @@ func _build() -> void:
 		var leg := _pivot(hips, Vector3(side * (0.12 if female else 0.1), -0.05, 0))
 		var knee: Node3D
 		if is_lingerie:
-			Art.add_mesh(leg, Art.capsule(0.085, 0.2), ling_m, Vector3(0, -0.06, 0))
-			knee = _pivot(leg, Vector3(0, -0.42, 0))
 			var leg_m: Material = Art.color(Color(0.08, 0.06, 0.07), 0.35) if stockings else skin_m
+			# трусики сверху и бедро до колена — иначе между тазом и икрами дыра, и тело «летит»
+			Art.add_mesh(leg, Art.capsule(0.085, 0.22), ling_m, Vector3(0, -0.06, 0))
+			Art.add_mesh(leg, Art.capsule(0.07, 0.46), leg_m, Vector3(0, -0.2, 0))
+			knee = _pivot(leg, Vector3(0, -0.42, 0))
 			Art.add_mesh(knee, Art.capsule(0.065, 0.44), leg_m, Vector3(0, -0.2, 0))
 			# туфелька на каблуке, без логотипов
 			Art.add_mesh(knee, Art.box(Vector3(0.1, 0.035, 0.2)), ling_m, Vector3(0, -0.43, -0.03))
@@ -553,7 +558,8 @@ func _process(delta: float) -> void:
 			tgt.root_x = 1.5; tgt.hips_y = 0.9; tgt.arm_l = 0.2; tgt.arm_r = 0.2; tgt.arm_lz = -0.2; tgt.arm_rz = 0.2
 			tgt.head_x = 0.1 + sin(_t * 1.2) * 0.03
 
-	position.y = lerpf(position.y, 0.0, k)
+	if settle_floor:
+		position.y = lerpf(position.y, 0.0, k)
 	rotation.x = lerp_angle(rotation.x, tgt.root_x, k * 0.5)
 	hips.position.y = lerpf(hips.position.y, tgt.hips_y, k)
 	spine.rotation.x = lerp_angle(spine.rotation.x, tgt.spine_x, k)

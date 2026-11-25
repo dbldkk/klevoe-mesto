@@ -8,6 +8,8 @@ const MAX_DRUNK := 75.0
 const TIP := 50
 const TIP_AMOUNTS := [50, 100, 500]
 const PRIVATE := 400
+## Верх бархатной сцены (центр блока 0.35, высота 0.7). Ноги персонажа — в начале координат модели.
+const STAGE_TOP := 0.7
 
 var _inside := false
 var _bouncer: CharacterModel
@@ -128,6 +130,8 @@ func _dress_dancer(m: CharacterModel, def: Dictionary) -> void:
 	m.skin = CharacterModel.SKINS[int(def["skin"])]
 	m.fat = false
 	m.height_scale = float(def.get("height", 1.0))
+	# иначе CharacterModel каждый кадр тянет y к 0 и девушки проваливаются в помост
+	m.settle_floor = false
 
 
 func _spawn_people() -> void:
@@ -149,13 +153,13 @@ func _spawn_people() -> void:
 	var defs: Array = [
 		{"id": "alina", "name": "Алина", "face": "dancer_a", "hair": Color(0.08, 0.05, 0.04),
 			"skin": 0, "lingerie": 1, "stockings": true, "pole": true, "height": 1.02,
-			"pos": Vector3(0.0, 0.7, -2.8)},
+			"pos": Vector3(0.0, STAGE_TOP, -2.8)},
 		{"id": "katya", "name": "Катя", "face": "dancer_b", "hair": Color(0.38, 0.16, 0.08),
 			"skin": 1, "lingerie": 2, "stockings": true, "pole": false, "height": 0.98,
-			"pos": Vector3(-1.6, 0.7, -2.5)},
+			"pos": Vector3(-1.6, STAGE_TOP, -2.5)},
 		{"id": "nika", "name": "Ника", "face": "dancer_c", "hair": Color(0.55, 0.42, 0.22),
 			"skin": 0, "lingerie": 3, "stockings": false, "pole": false, "height": 1.0,
-			"pos": Vector3(1.6, 0.7, -2.2)},
+			"pos": Vector3(1.6, STAGE_TOP, -2.2)},
 	]
 	for def in defs:
 		var d := CharacterModel.new()
@@ -234,15 +238,20 @@ func _process(delta: float) -> void:
 		if d == null or not is_instance_valid(d):
 			continue
 		var phase := _t * (1.6 + i * 0.25) + i
+		var bounce := absf(sin(phase * 2.0)) * 0.08
+		if i < _flourish.size() and _flourish[i] > 0.0:
+			bounce += absf(sin(_t * 10.0)) * 0.06
 		if _dancer_pole[i]:
-			# танец у пилона: кружение вокруг шеста
+			# танец у пилона: кружение вокруг шеста, ноги на верхней кромке сцены
 			var spin := _t * 1.35
 			var r := 0.22
-			d.position = Vector3(sin(spin) * r, _home[i].y + absf(sin(phase * 2.2)) * 0.1, _home[i].z + cos(spin) * r)
+			d.position = Vector3(sin(spin) * r, STAGE_TOP + bounce, _home[i].z + cos(spin) * r)
 			d.rotation.y = spin + PI * 0.5
 		else:
 			d.rotation.y = PI + sin(phase) * 0.55
-			d.position.y = _home[i].y + absf(sin(phase * 2.0)) * 0.08
+			d.position.x = _home[i].x
+			d.position.z = _home[i].z
+			d.position.y = STAGE_TOP + bounce
 		if d.spine:
 			d.spine.rotation.z = sin(phase * 1.3) * 0.22
 			d.spine.rotation.x = sin(phase * 0.8) * 0.1

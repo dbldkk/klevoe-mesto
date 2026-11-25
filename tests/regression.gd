@@ -290,6 +290,13 @@ func _run() -> void:
 				check((ch as CharacterModel).lingerie > 0, "spawned dancer %s wears lingerie" % ch.name)
 				check(ch.find_child("Bra", true, false) != null, "spawned dancer %s has a bra" % ch.name)
 		check(girls >= 3, "three female dancers are in the club")
+		# ноги на верхней кромке сцены, а не в толще помоста (модель стоит в y=0)
+		var stage_top: float = club.to_global(Vector3(0.0, NeonClub.STAGE_TOP, 0.0)).y
+		for ch in club.get_children():
+			if ch is CharacterModel and (ch as CharacterModel).female:
+				var feet_y := (ch as Node3D).global_position.y
+				check(absf(feet_y - stage_top) <= 0.2,
+					"dancer %s feet are on the stage (y=%.2f stage=%.2f)" % [ch.name, feet_y, stage_top])
 	var in_yard := 0
 	var decor := get_tree().get_first_node_in_group("decor")
 	if decor:
