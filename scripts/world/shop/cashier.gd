@@ -19,7 +19,7 @@ func get_prompt(_player: Node) -> String:
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "f", SpeechBank.zina(), 2.2, 4.0)
+	Chatter.attach.call_deferred(self, "f", SpeechBank.zina(), 2.2, 4.0, "zina")
 	add_to_group("npc")
 
 

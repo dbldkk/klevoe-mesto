@@ -32,7 +32,7 @@ var _spd := 0.0
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "m_low", SpeechBank.semenych(), 3.2, 16.0)
+	Chatter.attach.call_deferred(self, "m_low", SpeechBank.semenych(), 3.2, 16.0, "semenych")
 	add_to_group("inspector")
 	add_to_group("npc")
 	_build_route()
@@ -273,7 +273,7 @@ func _say(text: String) -> void:
 func say(text: String) -> void:
 	_speech.text = text
 	_speech.modulate.a = 1.0
-	Sfx.say(global_position + Vector3.UP * 1.5, "m_low", text)
+	Sfx.say(global_position + Vector3.UP * 1.5, "m_low", text, "semenych")
 
 
 @rpc("authority", "call_remote", "reliable")

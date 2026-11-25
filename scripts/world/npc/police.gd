@@ -44,7 +44,7 @@ func _ready() -> void:
 		lines = SpeechBank.semenov()
 	elif officer_key == "nina":
 		lines = SpeechBank.nina()
-	var ch := Chatter.attach(self, "m_low" if officer_key != "nina" else "f", lines, 2.9, 6.0)
+	var ch := Chatter.attach(self, "m_low" if officer_key != "nina" else "f", lines, 2.9, 6.0, officer_key)
 	ch.condition = func() -> bool: return state == S.PATROL
 	add_to_group("npc")
 	add_to_group("police")
@@ -436,7 +436,7 @@ func _say(text: String, force := false) -> void:
 func say(text: String) -> void:
 	_speech.text = text
 	_speech.modulate.a = 1.0
-	Sfx.say(global_position + Vector3.UP * 1.7, "m_low", text)
+	Sfx.say(global_position + Vector3.UP * 1.7, "m_low" if officer_key != "nina" else "f", text, officer_key)
 
 
 # ------------------------------------------------------------ вид (у всех)

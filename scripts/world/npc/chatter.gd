@@ -5,6 +5,7 @@ extends Node
 
 var lines: Array = []
 var voice := "m"
+var speaker := ""
 var radius := 5.0
 var height := 2.35
 var _label: Label3D
@@ -18,9 +19,10 @@ var condition: Callable = Callable()   ## если задано — говори
 static var _global_until := 0.0        ## чтобы двое не говорили разом
 
 
-static func attach(npc: Node3D, voice_id: String, phrases: Array, h := 2.35, r := 5.0) -> Chatter:
+static func attach(npc: Node3D, voice_id: String, phrases: Array, h := 2.35, r := 5.0, speaker := "") -> Chatter:
 	var c := Chatter.new()
 	c.voice = voice_id
+	c.speaker = speaker
 	c.lines = phrases
 	c.height = h
 	c.radius = r
@@ -68,7 +70,7 @@ func speak(text := "") -> void:
 	_label.modulate.a = 1.0
 	_cool = randf_range(32.0, 55.0)
 	_global_until = Time.get_ticks_msec() / 1000.0 + 5.0
-	Sfx.say((get_parent() as Node3D).global_position + Vector3.UP * (height - 0.6), voice, text)
+	Sfx.say((get_parent() as Node3D).global_position + Vector3.UP * (height - 0.6), voice, text, speaker)
 
 
 func _next_line() -> String:

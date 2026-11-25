@@ -1,11 +1,15 @@
 extends Node
 ## Звуки. Sfx.play("splash", позиция) — 3D-звук в мире (или 2D, если позиции нет).
 ## Sfx.loop("reel", вкл/выкл) — зацикленный 2D-звук. Фон (птицы, сверчки, вода, музыка казино) — сам.
-## Файлы — art/sfx/*.wav (генерирует tools/gen_sfx.py). Есть варианты name0..name2 — берётся случайный.
+## Файлы — art/sfx/*.{ogg,wav}. Сначала ищем .ogg (CC0), потом .wav. Варианты name0..name2 — случайный.
+## club_music и wedding_music — тот же файл, что casino_music (чтобы не плодить копии).
+## Голос NPC: art/voice/<speaker>/<hash>.ogg, иначе системный TTS, иначе бормотание.
 
 const DIR := "res://art/sfx/"
 const LOOPS := ["tv", "reel", "pee", "rain", "engine", "bubbling", "oars", "bike", "amb_day", "amb_night", "amb_water", "casino_music",
-	"wedding_music", "funeral_music"]
+	"wedding_music", "funeral_music", "club_music", "wind"]
+const ALIASES := {"club_music": "casino_music", "wedding_music": "casino_music"}
+const VOICE_DIR := "res://art/voice/"
 ## Шины громкости (v0.8): регулируются в настройках отдельно.
 const BUSES := ["Effects", "Ambient", "Music", "Voices"]
 
@@ -96,7 +100,59 @@ func _check_tts() -> void:
 
 ## NPC говорит фразу: понятной речью (если в системе есть русский голос и в настройках «Речь»),
 ## иначе «симлишем». voice: m, m_low, f, old. pos — откуда (дальше SAY_DIST — не слышно).
-func say(pos: Vector3, voice: String, text: String) -> void:
+func voice_key(text: String) -> String:
+	return _voice_hash(_clean(text))
+
+
+func _voice_hash(t: String) -> String:
+	var ctx := HashingContext.new()
+	ctx.start(HashingContext.HASH_SHA1)
+	ctx.update(t.to_utf8_buffer())
+	return ctx.finish().hex_encode().substr(0, 16)
+
+
+## Готовая реплика (Chatterbox) или null, если файла нет — тогда TTS / бормотание.
+func voice_stream(speaker: String, text: String) -> AudioStream:
+	var key := _voice_hash(_clean(text))
+	var folders: Array[String] = []
+	if speaker != "":
+		folders.append(speaker)
+	folders.append("_")
+	for folder in folders:
+		var path := VOICE_DIR + folder + "/" + key + ".ogg"
+		if ResourceLoader.exists(path):
+			return load(path) as AudioStream
+	return null
+
+
+func _play_voice(stream: AudioStream, pos: Vector3, dist: float) -> void:
+	if stream == null or not is_inside_tree():
+		return
+	var vol := Settings.vol.get("Voices", 0.9) as float
+	vol *= Saves.volume * (1.0 - clampf(dist / SAY_DIST, 0.0, 1.0) * 0.6)
+	var db := linear_to_db(maxf(vol, 0.0001)) - 2.0
+	if pos != Vector3.ZERO:
+		var p3 := AudioStreamPlayer3D.new()
+		p3.stream = stream
+		p3.volume_db = db
+		p3.bus = "Voices"
+		p3.unit_size = 7.0
+		p3.max_distance = SAY_DIST + 6.0
+		get_tree().root.add_child(p3)
+		p3.global_position = pos
+		p3.play()
+		p3.finished.connect(p3.queue_free)
+	else:
+		var p2 := AudioStreamPlayer.new()
+		p2.stream = stream
+		p2.volume_db = db
+		p2.bus = "Voices"
+		add_child(p2)
+		p2.play()
+		p2.finished.connect(p2.queue_free)
+
+
+func say(pos: Vector3, voice: String, text: String, speaker := "") -> void:
 	var cam := get_viewport().get_camera_3d()
 	var dist := 0.0
 	if cam and pos != Vector3.ZERO:
@@ -105,6 +161,10 @@ func say(pos: Vector3, voice: String, text: String) -> void:
 			return
 	var mode: int = Settings.voice_mode
 	if mode == 2:
+		return
+	var recorded := voice_stream(speaker, text)
+	if recorded:
+		_play_voice(recorded, pos, dist)
 		return
 	if mode == 0 and has_tts():
 		var clean := _clean(text)
@@ -155,19 +215,40 @@ func babble(pos: Vector3, voice: String, text_len: int = 20) -> void:
 func stream_of(name: String) -> AudioStream:
 	if _cache.has(name):
 		return _cache[name]
-	var path := DIR + name + ".wav"
+	var key := String(ALIASES.get(name, name))
 	var s: AudioStream = null
-	if ResourceLoader.exists(path):
-		s = load(path)
-	elif ResourceLoader.exists(DIR + name + "0.wav"):
-		s = null   # варианты — выбираются в play
-	if s is AudioStreamWAV and name in LOOPS:
+	var exts: Array[String] = [".ogg", ".wav"]
+	for ext in exts:
+		var path := DIR + key + ext
+		if ResourceLoader.exists(path):
+			s = load(path) as AudioStream
+			break
+	if s == null:
+		for ext in exts:
+			if ResourceLoader.exists(DIR + key + "0" + ext):
+				_cache[name] = null   # варианты — выбираются в play
+				return null
+	s = _make_loop(s, name)
+	_cache[name] = s
+	return s
+
+
+func _make_loop(s: AudioStream, name: String) -> AudioStream:
+	if s == null:
+		return s
+	var looped := name in LOOPS or String(ALIASES.get(name, "")) in LOOPS
+	if not looped:
+		return s
+	if s is AudioStreamWAV:
 		var w := (s as AudioStreamWAV).duplicate() as AudioStreamWAV
 		w.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		w.loop_begin = 0
 		w.loop_end = int(w.get_length() * w.mix_rate)
-		s = w
-	_cache[name] = s
+		return w
+	if s is AudioStreamOggVorbis:
+		var o := (s as AudioStreamOggVorbis).duplicate() as AudioStreamOggVorbis
+		o.loop = true
+		return o
 	return s
 
 
@@ -241,14 +322,17 @@ func _process(delta: float) -> void:
 		target["amb_night" if night else "amb_day"] = -18.0 if indoor else -9.0
 		var ld := Terrain.lake_distance(p.x, p.z).x
 		target.amb_water = lerpf(-8.0, -40.0, clampf(ld / 14.0, 0.0, 1.0)) if ld < 14.0 else -80.0
-		var casino := get_tree().root.get_node_or_null("World/Casino") as Node3D
-		if casino:
-			var l := casino.to_local(p)
-			if absf(l.x) < 10.0 and absf(l.z) < 7.0:
-				target.casino_music = -10.0
-			else:
-				var d := casino.global_position.distance_to(p)
-				target.casino_music = lerpf(-24.0, -60.0, clampf((d - 8.0) / 25.0, 0.0, 1.0)) if d < 33.0 else -80.0
+		var music_db := -80.0
+		for node_name in ["World/Casino", "World/StripClub"]:
+			var venue := get_tree().root.get_node_or_null(node_name) as Node3D
+			if venue == null:
+				continue
+			var l := venue.to_local(p)
+			var inside := absf(l.x) < 10.0 and absf(l.z) < 8.0 and l.y < 5.0
+			var d := venue.global_position.distance_to(p)
+			var db := -10.0 if inside else (lerpf(-24.0, -60.0, clampf((d - 8.0) / 25.0, 0.0, 1.0)) if d < 33.0 else -80.0)
+			music_db = maxf(music_db, db)
+		target.casino_music = music_db
 	for n in _amb:
 		var pl: AudioStreamPlayer = _amb[n]
 		var want: float = target[n] + volume_db
@@ -264,7 +348,7 @@ func _process(delta: float) -> void:
 
 
 func _inside_any(p: Vector3) -> bool:
-	for n in ["World/House", "World/LiquorStore", "World/Casino", "World/Shop"]:
+	for n in ["World/House", "World/LiquorStore", "World/Casino", "World/Shop", "World/Club", "World/StripClub"]:
 		var b := get_tree().root.get_node_or_null(n) as Node3D
 		if b:
 			var l := b.to_local(p)

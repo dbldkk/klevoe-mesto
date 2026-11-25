@@ -74,7 +74,7 @@ func repair(slot_index: int) -> String:
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "m_low", SpeechBank.tolya(), 2.4, 5.0)
+	Chatter.attach.call_deferred(self, "m_low", SpeechBank.tolya(), 2.4, 5.0, "tolya")
 	add_to_group("trader")
 	add_to_group("npc")
 	Net.hosted.connect(_load)

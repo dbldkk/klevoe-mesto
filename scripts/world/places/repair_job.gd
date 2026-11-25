@@ -42,7 +42,7 @@ func _ready() -> void:
 	Build.text(car, Vector3(0, 0.75, 1.86), "Т 666 ОК", 40, Color(0.1, 0.1, 0.1), 0.004)
 	_gena = Build.person(self, Vector3(-1.6, 0, -1.6), 0.0, {"shirt": 4, "pants": 2, "skin": 1, "hat": 1, "hat_color": 5, "face": 2}, "player_b")
 	_gena.rotation.y = -0.6
-	Chatter.attach.call_deferred(_gena, "m", SpeechBank.gena(), 2.3, 5.0)
+	Chatter.attach.call_deferred(_gena, "m", SpeechBank.gena(), 2.3, 5.0, "gena")
 	Build.text(self, Vector3(-1.6, 2.0, -1.6), "Сосед Гена", 36, Color(1, 0.9, 0.75), 0.006, 0.0, true)
 	Build.talk_area(self, Vector3(0, 1.0, -1.0), Vector3(2.6, 2.0, 4.6), self)
 	# ящик с инструментами

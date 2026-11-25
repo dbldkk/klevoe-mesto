@@ -26,7 +26,7 @@ var _talk := 0.0
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "f" if face.ends_with("_f") else "m", SpeechBank.dealer(), 2.3, 4.5)
+	Chatter.attach.call_deferred(self, "f" if face.ends_with("_f") else "m", SpeechBank.dealer(), 2.3, 4.5, "dealer")
 	_rng.randomize()
 	model = Build.person(self, Vector3.ZERO, 0.0, skin_data, face, game == "roulette")
 	Build.text(self, Vector3(0, 2.2, 0), dealer_name, 40, Color(1, 0.9, 0.6), 0.006, 0.0, true)

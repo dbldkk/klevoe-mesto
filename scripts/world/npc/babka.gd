@@ -19,7 +19,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	Chatter.attach.call_deferred(self, "old", SpeechBank.zoya(), 2.45, 5.0)
+	Chatter.attach.call_deferred(self, "old", SpeechBank.zoya(), 2.45, 5.0, "zoya")
 	add_to_group("babka")
 	add_to_group("poi")
 	set_meta("poi_name", "Баба Зоя")
@@ -101,7 +101,7 @@ func tattle(line: String) -> void:
 func say(text: String) -> void:
 	_speech.text = text
 	_speech.modulate.a = 1.0
-	Sfx.say(global_position + Vector3(0, 1.4, 0), "old", text)
+	Sfx.say(global_position + Vector3(0, 1.4, 0), "old", text, "zoya")
 
 
 func _process(delta: float) -> void:
