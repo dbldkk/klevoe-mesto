@@ -2,16 +2,21 @@ extends CanvasLayer
 ## Колесо действий на Q: редкие действия без отдельных клавиш.
 ## Наведение + клик (или отпускание Q) запускает действие и закрывает меню.
 
-const RADIUS := 168.0
-const BTN := Vector2(132, 92)
+const RADIUS := 230.0
+const BTN := Vector2(118, 70)
 
 const ACTIONS := [
+	{"id":"doctor","title":"Позвать\nврача","hint":"слушай колокольчик"},
+	{"id":"bucket","title":"Снять\nведро","hint":"освободить голову"},
+	{"id":"goose","title":"Откупиться\nот гуся","hint":"хлеб или 15 ₽"},
+	{"id":"mermaid","title":"Русалка\nДокументы!","hint":"проверить удостоверение"},
+	{"id":"mermaid_fish","title":"Отдать\nрыбу","hint":"русалке при исполнении"},
 	{ "id": "pee", "title": "Обоссаться", "hint": "когда прижмёт" },
 	{ "id": "poop", "title": "Обосраться", "hint": "когда прижмёт" },
 	{ "id": "toast", "title": "Тост", "hint": "нужна бутылка" },
 	{ "id": "gift", "title": "Угостить", "hint": "посмотри на человека" },
 	{ "id": "flashlight", "title": "Фонарик", "hint": "из «Шестёрочки»" },
-	{ "id": "drop_cart", "title": "Выложить корзину", "hint": "вернуть товар на полки" },
+	{ "id": "drop_cart", "title": "Выложить\nкорзину", "hint": "вернуть товар на полки" },
 	{ "id": "dispute", "title": "Поспорить", "hint": "посмотри на игрока" },
 ]
 
@@ -167,6 +172,16 @@ func can_do(id: String) -> bool:
 	var p := get_tree().get_first_node_in_group("local_player")
 	if p == null:
 		return false
+	var m := get_tree().get_first_node_in_group("mischief")
+	if id == "doctor":
+		return Inventory.blindness > 0
+	if id == "bucket":
+		return m != null and m.bucket_left > 0
+	if id == "goose":
+		var g := get_tree().get_first_node_in_group("goose")
+		return g != null and g.target_peer == multiplayer.get_unique_id()
+	if id in ["mermaid","mermaid_fish"]:
+		return m != null and is_instance_valid(m._prank_model) and (id == "mermaid" or not Inventory.basket.is_empty())
 	if p.is_busy_body() and not (id == "pee" or id == "poop"):
 		return false
 	match id:
@@ -198,7 +213,13 @@ func activate(id: String) -> void:
 		close()
 		return
 	close()
+	var m := get_tree().get_first_node_in_group("mischief")
 	match id:
+		"doctor": m.call_doctor()
+		"bucket": m.remove_bucket()
+		"goose": get_tree().get_first_node_in_group("goose").pay_off()
+		"mermaid": m.answer_prank(false)
+		"mermaid_fish": m.answer_prank(true)
 		"pee":
 			p.start_toilet("pee")
 		"poop":

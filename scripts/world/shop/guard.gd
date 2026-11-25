@@ -220,6 +220,8 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= _gravity * delta
 	var goal := Vector3.INF
+	velocity.x = 0.0
+	velocity.z = 0.0
 	var speed := WALK_SPEED
 
 	match state:
@@ -318,7 +320,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
-	move_and_slide()
+	NpcMotion.move(self, delta)
 
 
 func _next_idle_state() -> void:

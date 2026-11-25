@@ -63,8 +63,8 @@ var _saved_fog := 0.0015
 func _ready() -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(140, 200)
-	plane.subdivide_width = 140
-	plane.subdivide_depth = 200
+	plane.subdivide_width = [35, 35, 70, 140][Settings.quality]
+	plane.subdivide_depth = [50, 50, 100, 200][Settings.quality]
 	mesh = plane
 	position = Vector3(-4, Terrain.WATER_Y, -102)
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

@@ -25,12 +25,14 @@ func _ready() -> void:
 
 
 func open(back_to := "") -> void:
+	Sfx.stop_voices()
 	_back_to = back_to
 	_refresh_keys()
 	_show()
 
 
 func close() -> void:
+	Sfx.stop_voices()
 	Settings.save()
 	Settings.changed.emit()
 	if _back_to != "":
@@ -155,15 +157,16 @@ func _audio_tab() -> Control:
 	ob.add_item("Только текст")
 	ob.selected = Settings.voice_mode
 	ob.item_selected.connect(func(i: int) -> void:
+		Sfx.stop_voices()
 		Settings.voice_mode = i
-		Sfx.say(Vector3.ZERO, "old", "Здравствуй, милок! Червячков не надо?"))
+		Sfx.say(Vector3.ZERO, "old", "Здравствуй, милок! Червячков не надо?", "zoya", true))
 	r.add_child(ob)
 	v.add_child(r)
 	v.add_child(_hint("Речь работает, если в Windows есть русский голос (Параметры → Время и язык → Речь). Если нет — NPC бормочут."
 		if not Sfx.has_tts() else "Найден русский голос — NPC говорят по-настоящему."))
 	v.add_child(UiKit.button("Проверить звук", func() -> void:
 		Sfx.play("splash")
-		Sfx.say(Vector3.ZERO, "m_low", "Гражданин, предъявите документы!"), 15))
+		Sfx.say(Vector3.ZERO, "m_low", "Гражданин, предъявите документы!", "petrovich", true), 15))
 	return v.get_parent()
 
 

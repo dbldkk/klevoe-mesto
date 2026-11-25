@@ -124,6 +124,11 @@ func _process(delta: float) -> void:
 # ---------------------------------------------------------------- локальная логика
 
 func _update_local(delta: float) -> void:
+	if state in [State.WAITING, State.BITE]:
+		var mayhem := get_tree().get_first_node_in_group("village_mayhem")
+		if mayhem and mayhem.is_polluted(_land_pos):
+			_finish("Вода стала коричневой. Рыба срочно переехала.", Color.ORANGE)
+			return
 	var blocked: bool = Events.ui_open or player.input_cooldown > 0.0 or player.is_busy_body() \
 		or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED
 	var click := not blocked and Input.is_action_just_pressed("fish_action")
@@ -254,6 +259,10 @@ func _on_landed(in_water: bool, land: Vector3) -> void:
 	if not in_water:
 		_finish("Мимо воды", Color.LIGHT_GRAY)
 		return
+	var mayhem := get_tree().get_first_node_in_group("village_mayhem")
+	if mayhem and mayhem.is_polluted(land):
+		_finish("Рыба ушла из коричневой воды. Отплыви хотя бы на семь метров.",Color.ORANGE)
+		return
 	_land_pos = land
 	in_reeds = Reeds.in_zone(land)
 	var dep := Terrain.depth(land.x, land.z)
@@ -380,9 +389,9 @@ func _update_fight(delta: float, blocked: bool) -> void:
 		distance += p * 2.0 * delta
 	# Рывок: не повёл удилище — леска натягивается и рыба уходит; повёл — рыба устаёт быстрее.
 	if dash_k > 0.0:
-		tension += 26.0 * strong * delta
-		distance += 1.4 * strong * delta
-		stamina = minf(stamina + 3.0 * delta, 100.0)
+		tension += 18.0 * strong * delta
+		distance += 0.8 * strong * delta
+		stamina = minf(stamina + 1.0 * delta, 100.0)
 	elif dash_k < 0.0:
 		stamina = maxf(stamina - 4.0 * delta, 0.0)
 	var shaky := (1.0 + Inventory.drunk / 100.0 * 1.5) * (0.6 if Inventory.calm_time > 0.0 else 1.0)
@@ -399,7 +408,7 @@ func _update_fight(delta: float, blocked: bool) -> void:
 	distance = minf(distance, start_distance + 8.0)
 
 	# Рыба устаёт, пока леска натянута; отдыхает, когда слабо.
-	var size_k := 1.0 + _hooked_kg * 0.12
+	var size_k := 1.0 + sqrt(_hooked_kg) * 0.16
 	if tension > 25.0:
 		stamina = maxf(stamina - (3.0 + tension * 0.09) / size_k * delta, 0.0)
 	else:
@@ -434,7 +443,7 @@ func _update_fight(delta: float, blocked: bool) -> void:
 		_finish("Леска провисла — рыба сошла с крючка", Color.TOMATO)
 		return
 
-	if _rng.randf() < RANDOM_ESCAPE_PER_SEC * delta * (2.0 if surge else 1.0):
+	if tension < 15.0 and stamina > 35.0 and _rng.randf() < RANDOM_ESCAPE_PER_SEC * delta:
 		_finish("Рыба сорвалась!", Color.TOMATO)
 		return
 
@@ -465,6 +474,9 @@ func _catch() -> void:
 	_finish("Поймал: %s, %.2f кг (%s)" % [f.display_name, _hooked_kg, FishData.rarity_name(f.rarity)],
 		FishData.rarity_color(f.rarity))
 	player.show_catch(f.id)
+	var mischief := get_tree().get_first_node_in_group("mischief")
+	if mischief and f.id != &"tsar" and _rng.randf()<0.045:
+		mischief.offer_fish(Inventory.basket.back())
 
 
 func _finish(message: String, color: Color) -> void:
@@ -522,6 +534,10 @@ func request_bite(cast_id: int, bait_id: StringName, drunk: float, where: String
 	if GameData.get_bait(bait_id) == null:
 		return
 	drunk = clampf(drunk, 0.0, 100.0)
+	var mayhem := get_tree().get_first_node_in_group("village_mayhem")
+	if mayhem and mayhem.is_polluted(player.bobber_pos):
+		NetUtil.call_peer(self,player.get_multiplayer_authority(),"pollution_rejected",[cast_id])
+		return
 	Weather.update_conditions(get_tree())
 	var f := GameData.roll_fish(bait_id, _rng, drunk, where)
 	var kg := GameData.roll_weight(f, _rng, drunk, where)
@@ -621,3 +637,11 @@ func _spin_reel(from: Node, delta: float) -> void:
 		crank.rotate_x(delta * 14.0)
 	elif state == State.FIGHT:
 		crank.rotate_x(delta * 3.5)
+
+
+@rpc("any_peer","reliable")
+func pollution_rejected(cast_id: int) -> void:
+	if multiplayer.get_remote_sender_id() not in [0,1] or cast_id != _cast_id:
+		return
+	cancel()
+	Events.notify("Рыба объявила санитарный час. Отплыви подальше.",Color.ORANGE,false)

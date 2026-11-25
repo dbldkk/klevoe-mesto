@@ -21,6 +21,9 @@ var _amb_t := 0.0
 
 
 var _babble_t: Dictionary = {}
+var _voice_cache: Dictionary = {}
+var _voice_epoch := 0
+var _voice_blocked := true
 
 
 func _ready() -> void:
@@ -55,6 +58,8 @@ static func bus_for(kind: String) -> String:
 
 ## Громкость шины 0..1.
 func set_bus_volume(bus: String, v: float) -> void:
+	if bus == "Voices":
+		stop_voices()
 	var i := AudioServer.get_bus_index(bus)
 	if i >= 0:
 		AudioServer.set_bus_volume_db(i, linear_to_db(maxf(v, 0.0001)))
@@ -114,6 +119,9 @@ func _voice_hash(t: String) -> String:
 ## Готовая реплика (Chatterbox) или null, если файла нет — тогда TTS / бормотание.
 func voice_stream(speaker: String, text: String) -> AudioStream:
 	var key := _voice_hash(_clean(text))
+	var cache_key := speaker + ":" + key
+	if _voice_cache.has(cache_key):
+		return _voice_cache[cache_key]
 	var folders: Array[String] = []
 	if speaker != "":
 		folders.append(speaker)
@@ -121,7 +129,10 @@ func voice_stream(speaker: String, text: String) -> AudioStream:
 	for folder in folders:
 		var path := VOICE_DIR + folder + "/" + key + ".ogg"
 		if ResourceLoader.exists(path):
-			return load(path) as AudioStream
+			var stream := load(path) as AudioStream
+			_voice_cache[cache_key] = stream
+			return stream
+	_voice_cache[cache_key] = null
 	return null
 
 
@@ -129,13 +140,13 @@ func _play_voice(stream: AudioStream, pos: Vector3, dist: float) -> void:
 	if stream == null or not is_inside_tree():
 		return
 	var vol := Settings.vol.get("Voices", 0.9) as float
-	vol *= Saves.volume * (1.0 - clampf(dist / SAY_DIST, 0.0, 1.0) * 0.6)
-	var db := linear_to_db(maxf(vol, 0.0001)) - 2.0
+	var db := linear_to_db(maxf(1.0 - clampf(dist / SAY_DIST, 0.0, 1.0) * 0.6, 0.0001)) - 2.0
 	if pos != Vector3.ZERO:
 		var p3 := AudioStreamPlayer3D.new()
 		p3.stream = stream
 		p3.volume_db = db
 		p3.bus = "Voices"
+		p3.add_to_group("npc_voice")
 		p3.unit_size = 7.0
 		p3.max_distance = SAY_DIST + 6.0
 		get_tree().root.add_child(p3)
@@ -147,12 +158,21 @@ func _play_voice(stream: AudioStream, pos: Vector3, dist: float) -> void:
 		p2.stream = stream
 		p2.volume_db = db
 		p2.bus = "Voices"
+		p2.add_to_group("npc_voice")
 		add_child(p2)
 		p2.play()
 		p2.finished.connect(p2.queue_free)
 
 
-func say(pos: Vector3, voice: String, text: String, speaker := "") -> void:
+func say(pos: Vector3, voice: String, text: String, speaker := "", preview := false) -> void:
+	if not preview and menus_block_voice():
+		return
+	if speaker.is_empty():
+		speaker = speaker_for(text)
+	if speaker in ["zina", "valya", "nina", "alina", "katya", "nika", "doctor"]:
+		voice = "f"
+	elif speaker == "zoya":
+		voice = "old"
 	var cam := get_viewport().get_camera_3d()
 	var dist := 0.0
 	if cam and pos != Vector3.ZERO:
@@ -162,7 +182,8 @@ func say(pos: Vector3, voice: String, text: String, speaker := "") -> void:
 	var mode: int = Settings.voice_mode
 	if mode == 2:
 		return
-	var recorded := voice_stream(speaker, text)
+	stop_voices()
+	var recorded := voice_stream(speaker, text) if mode == 0 else null
 	if recorded:
 		_play_voice(recorded, pos, dist)
 		return
@@ -170,7 +191,7 @@ func say(pos: Vector3, voice: String, text: String, speaker := "") -> void:
 		var clean := _clean(text)
 		if clean.length() < 2:
 			return
-		var female := voice == "f" or voice == "old"
+		var female := voice in ["f", "f_high", "old"]
 		var id := _tts_female if female else _tts_male
 		var pitch := {"m": 0.95, "m_low": 0.75, "f": 1.1, "old": 1.35}.get(voice, 1.0) as float
 		if female and id == _tts_male:
@@ -182,6 +203,16 @@ func say(pos: Vector3, voice: String, text: String, speaker := "") -> void:
 		DisplayServer.tts_speak(clean, id, clampi(int(vol * 100.0), 0, 100), clampf(pitch, 0.3, 2.0), 1.05 if voice != "old" else 0.95, 0, true)
 		return
 	babble(pos, voice, text.length())
+
+
+func speaker_for(text: String) -> String:
+	var names := {"Зина":"zina", "Люда":"zina", "Баба Зоя":"zoya", "Бабка":"zoya", "Тётя Валя":"valya",
+		"Петрович":"petrovich", "Участковый Петрович":"petrovich", "Сергей Палыч":"semenov",
+		"Участковый Сергей Палыч":"semenov", "Нина Васильевна":"nina", "Дядя Толя":"tolya",
+		"Михалыч":"mikhalych", "Гоша":"thimble", "Гена":"gena", "Семёныч":"semenych",
+		"Вышибала":"bouncer", "Алина":"alina", "Катя":"katya", "Ника":"nika", "Фельдшер":"doctor"}
+	var i := text.find(":")
+	return str(names.get(text.left(i),"")) if i>0 and i<40 else ""
 
 
 static func _clean(t: String) -> String:
@@ -201,6 +232,9 @@ static func _clean(t: String) -> String:
 
 ## «Симлиш» — бормотание NPC вместо озвучки. voice: m, m_low, f, old.
 func babble(pos: Vector3, voice: String, text_len: int = 20) -> void:
+	if voice == "f_high":
+		voice = "f"
+	var epoch := _voice_epoch
 	var key := "%s:%d:%d" % [voice, int(pos.x), int(pos.z)]
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - float(_babble_t.get(key, -9.0)) < 0.8:
@@ -209,7 +243,41 @@ func babble(pos: Vector3, voice: String, text_len: int = 20) -> void:
 	var name := "babble_" + voice
 	play(name, pos, -6.0, 0.12, "Voices")
 	if text_len > 38:
-		get_tree().create_timer(0.9).timeout.connect(func() -> void: play(name, pos, -7.0, 0.12, "Voices"))
+		get_tree().create_timer(0.9).timeout.connect(func() -> void:
+			if epoch == _voice_epoch:
+				play(name, pos, -7.0, 0.12, "Voices"))
+
+
+func menus_block_voice() -> bool:
+	if not Net.is_online():
+		return true
+	for group in ["main_menu", "pause_menu", "settings_ui"]:
+		var menu := get_tree().get_first_node_in_group(group)
+		if menu and menu.visible:
+			return true
+	return false
+
+
+func stop_voices() -> void:
+	_voice_epoch += 1
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.tts_stop()
+	for p in get_tree().get_nodes_in_group("npc_voice"):
+		p.stop()
+		p.queue_free()
+
+
+func stop_world_audio() -> void:
+	stop_voices()
+	Chatter._global_until = 0.0
+	_babble_t.clear()
+	for p in get_tree().get_nodes_in_group("world_audio"):
+		p.stop()
+		p.queue_free()
+	for p in _loops.values():
+		p.stop()
+	for p in _amb.values():
+		p.stop()
 
 
 func stream_of(name: String) -> AudioStream:
@@ -275,6 +343,7 @@ func play(name: String, pos: Variant = null, db := 0.0, pitch_var := 0.08, bus :
 		p.max_distance = 45.0
 		p.attenuation_filter_cutoff_hz = 9000.0
 		p.bus = bus
+		p.add_to_group("npc_voice" if bus == "Voices" else "world_audio")
 		get_tree().root.add_child(p)
 		p.global_position = pos
 		p.play()
@@ -285,6 +354,7 @@ func play(name: String, pos: Variant = null, db := 0.0, pitch_var := 0.08, bus :
 		p.volume_db = db + volume_db
 		p.pitch_scale = pitch
 		p.bus = bus
+		p.add_to_group("npc_voice" if bus == "Voices" else "world_audio")
 		add_child(p)
 		p.play()
 		p.finished.connect(p.queue_free)
@@ -308,6 +378,10 @@ func loop(name: String, on: bool, db := -4.0) -> void:
 
 
 func _process(delta: float) -> void:
+	var blocked := menus_block_voice()
+	if blocked and not _voice_blocked:
+		stop_voices()
+	_voice_blocked = blocked
 	_amb_t -= delta
 	if _amb_t > 0.0:
 		return

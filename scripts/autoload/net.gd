@@ -75,6 +75,7 @@ func join(address: String, port: int = DEFAULT_PORT) -> Error:
 
 
 func leave() -> void:
+	Sfx.stop_world_audio()
 	_registered = false
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
@@ -204,7 +205,11 @@ func send_snapshot() -> void:
 	var data := {"name": player_name, "inventory": Inventory.to_dict()}
 	var p := get_tree().get_first_node_in_group("local_player") as Node3D
 	if p:
-		data["pos"] = [p.global_position.x, p.global_position.y, p.global_position.z]
+		var save_pos: Vector3 = p.global_position
+		var m := p.get_node_or_null("Mischief")
+		if m and m.stunt_left > 0:
+			save_pos = m._landing
+		data["pos"] = [save_pos.x, save_pos.y, save_pos.z]
 		data["rot"] = p.rotation.y
 	if multiplayer.is_server():
 		_store(multiplayer.get_unique_id(), data)

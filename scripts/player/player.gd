@@ -141,6 +141,8 @@ func _ready() -> void:
 	_toast_said.visible = false
 	add_child(_toast_said)
 	_last_pos = global_position
+	if is_multiplayer_authority():
+		_install_mischief.call_deferred()
 	name_label.font_size = 46
 	name_label.outline_size = 14
 	name_label.pixel_size = 0.0055
@@ -271,7 +273,8 @@ func look_dir() -> Vector3:
 
 
 func is_busy_body() -> bool:
-	return _knocked_out or _action != "" or sleeping or hidden
+	var m := get_node_or_null("Mischief")
+	return _knocked_out or _action != "" or sleeping or hidden or (m != null and m.stunt_left > 0)
 
 
 ## Обновить, что в руках (после смены ячейки/износа).
@@ -464,6 +467,10 @@ func use_selected() -> void:
 				var nets := get_tree().get_first_node_in_group("nets")
 				if nets:
 					nets.try_place(self)
+			elif s.id == &"bucket":
+				var mischief := get_node_or_null("Mischief")
+				if mischief:
+					mischief.drop_bucket()
 		"misc":
 			if s.id == &"brine":
 				drink_brine()
@@ -510,6 +517,9 @@ func _drink(d: DrinkData, from_name: String) -> void:
 	if from_name != "":
 		line = "%s угостил(а) тебя: %s. %s" % [from_name, d.display_name, line]
 	Events.notify(line, Color(1.0, 0.85, 0.5))
+	var mischief := get_node_or_null("Mischief")
+	if mischief:
+		mischief.on_drink(d.id)
 	var drink_id := d.id
 	get_tree().create_timer(1.0).timeout.connect(func() -> void:
 		var bottles := get_tree().get_first_node_in_group("bottles")
@@ -944,6 +954,9 @@ func _tick_chug(delta: float) -> void:
 		Inventory.add_drunk(38.0)
 		Inventory.remove_item("drink", _chug_drink, 1)
 		Inventory.stat_add("drinks")
+		var mischief := get_node_or_null("Mischief")
+		if mischief:
+			mischief.on_drink(_chug_drink)
 		var bottles := get_tree().get_first_node_in_group("bottles")
 		if bottles:
 			bottles.request_drop(_chug_drink, global_position - global_basis.z * 0.6 + Vector3.UP * 1.2)
@@ -1087,6 +1100,10 @@ func _finish_toilet(what: String, accident: bool) -> void:
 	else:
 		Inventory.bowel = 0.0
 		Inventory.stat_add("poops")
+		if vehicle and vehicle.kind == "boat" and Terrain.depth(global_position.x,global_position.z)>1:
+			var mayhem := get_tree().get_first_node_in_group("village_mayhem")
+			if mayhem:
+				mayhem.pollute(global_position)
 		if mess and not clean:
 			mess.request_poop(global_position + global_basis.z * 0.4)
 		if accident:
@@ -1867,10 +1884,13 @@ func _tick_needs(delta: float) -> void:
 			Events.notify("Живот урчит… Надо поесть", Color.ORANGE)
 	elif Inventory.health > 0.0:
 		Inventory.health = minf(Inventory.health + HEAL_PER_SEC * delta, Inventory.MAX_HEALTH)
-	if _knocked_out or sleeping:
+	var stunt := get_node_or_null("Mischief")
+	if _knocked_out or sleeping or (stunt != null and stunt.stunt_left > 0):
 		return
 	if Inventory.drunk >= 99.9:
-		knock_out("Ты вырубился…")
+		var mischief := get_node_or_null("Mischief")
+		if mischief == null or not mischief.try_rocket():
+			knock_out("Ты вырубился…")
 	elif Inventory.health <= 0.0:
 		knock_out("Тебя вырубили…")
 	elif Inventory.bladder >= 100.0 and _action == "":
@@ -1908,6 +1928,10 @@ func _physics_process(delta: float) -> void:
 		return
 
 	input_cooldown = maxf(input_cooldown - delta, 0.0)
+	var mischief := get_node_or_null("Mischief")
+	if mischief and mischief.stunt_left > 0:
+		velocity = Vector3.ZERO
+		return
 	if sleeping or hidden:
 		velocity = Vector3.ZERO
 		return
@@ -1918,6 +1942,9 @@ func _physics_process(delta: float) -> void:
 		return
 	var d := Inventory.drunk / 100.0
 	_update_swimming()
+	if mischief and Inventory.drunk > 40 and not is_on_floor() and velocity.y < -5.2 and not swimming:
+		if mischief.start_ragdoll():
+			return
 
 	var can_move := not Events.ui_open and not _knocked_out and _action != "pee" and _action != "poop" \
 		and _action != "smoke" and fishing.state == FishingController.State.IDLE
@@ -2013,3 +2040,11 @@ func climb_to(point: Vector3) -> void:
 	global_position = point
 	velocity = Vector3.ZERO
 	swimming = false
+
+
+func _install_mischief() -> void:
+	if not is_inside_tree() or get_node_or_null("Mischief"):
+		return
+	var m := PlayerMischief.new()
+	m.name = "Mischief"
+	add_child(m)

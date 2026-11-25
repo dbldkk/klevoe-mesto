@@ -106,19 +106,19 @@ func _physics_process(delta: float) -> void:
 				var d: Vector3 = ((get_parent() as Node3D).global_basis * to).normalized()
 				velocity.x = d.x * 1.5
 				velocity.z = d.z * 1.5
-		move_and_slide()
+		NpcMotion.move(self, delta)
 		return
 	_think -= delta
 	_rest -= delta
 	if _rest > 0.0:
-		move_and_slide()
+		NpcMotion.move(self, delta)
 		return
 	if _think <= 0.0:
 		_think = 2.0
 		_target = _nearest(club as Node3D)
 	var t := get_tree().get_root().get_node_or_null("World/Players/%d" % _target) as Node3D
 	if t == null:
-		move_and_slide()
+		NpcMotion.move(self, delta)
 		return
 	var dir := t.global_position - global_position
 	dir.y = 0.0
@@ -139,7 +139,7 @@ func _physics_process(delta: float) -> void:
 			var club2 := get_tree().get_first_node_in_group("club")
 			if club2:
 				club2.call("_say", "%s: «Ладно-ладно, мир! Давай лучше выпьем»" % guest_name)
-	move_and_slide()
+	NpcMotion.move(self, delta)
 
 
 func _nearest(club: Node3D) -> int:

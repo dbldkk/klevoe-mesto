@@ -289,6 +289,8 @@ class _Wanderer extends Node3D:
 				Art.add_mesh(self, Art.box(Vector3(0.02, 0.03, 0.05)), Art.color(Color(0.85, 0.25, 0.1)), Vector3(0, 0.24, -0.13))
 
 	func _process(delta: float) -> void:
+		if not Net.is_online():
+			return
 		_wait -= delta
 		if _wait <= 0.0 or global_position.distance_to(_target) < 0.25:
 			var ang := randf() * TAU
@@ -298,12 +300,15 @@ class _Wanderer extends Node3D:
 		dir.y = 0
 		if dir.length() > 0.05:
 			var nxt := global_position + dir.normalized() * 0.7 * delta
+			if Terrain.depth(nxt.x, nxt.z) > 0.0:
+				_target = home
+				return
 			nxt.y = Terrain.height(nxt.x, nxt.z)
 			global_position = nxt
 			rotation.y = atan2(dir.x, dir.z)
 
 
-class _Pick extends Area3D:
+class _Pick extends Interactable:
 	var item_id: StringName = &"mushroom"
 
 	func _ready() -> void:

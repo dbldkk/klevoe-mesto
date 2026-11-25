@@ -18,7 +18,9 @@ static func build(kind: String, id: StringName, cond: float = 100.0) -> Node3D:
 		"sack": _sack(root)
 		"misc": _misc(root, id)
 		"tool":
-			if id == &"net":
+			if id == &"bucket":
+				_bucket(root)
+			elif id == &"net":
 				_net(root)
 			else:
 				_flashlight(root)
@@ -268,3 +270,12 @@ static func _flashlight(root: Node3D) -> void:
 	Art.add_mesh(root, Art.cyl(0.025, 0.025, 0.16, 12), Art.color(Color(0.15, 0.15, 0.17), 0.4, 0.6), Vector3(0, 0.08, 0))
 	Art.add_mesh(root, Art.cyl(0.04, 0.028, 0.05, 12), Art.color(Color(0.2, 0.2, 0.22), 0.3, 0.7), Vector3(0, 0.18, 0))
 	Art.add_mesh(root, Art.cyl(0.035, 0.035, 0.005, 12), Build.glow_mat(Color(1, 0.95, 0.7), 1.5), Vector3(0, 0.206, 0))
+
+
+static func _bucket(root: Node3D) -> void:
+	var metal := Art.color(Color(0.5,0.55,0.57),0.35,0.5)
+	for i in 12:
+		var a := TAU*i/12.0
+		Art.add_mesh(root,Art.box(Vector3(0.11,0.38,0.025)),metal,Vector3(sin(a)*0.22,0.19,cos(a)*0.22),Vector3(0,a,0))
+	Art.add_mesh(root,Art.cyl(0.21,0.21,0.03,12),metal,Vector3(0,0.015,0))
+	Art.add_mesh(root,Art.box(Vector3(0.46,0.025,0.025)),metal,Vector3(0,0.52,0))

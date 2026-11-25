@@ -16,8 +16,10 @@ const FEMALE := ["Зина", "Люда", "Невеста", "Тётя Валя"]
 const OLD := ["Баба Зоя", "Бабка"]
 
 
-func notify(text: String, color: Color = Color.WHITE) -> void:
+func notify(text: String, color: Color = Color.WHITE, speak := true) -> void:
 	toast.emit(text, color)
+	if not speak:
+		return
 	# Реплика NPC («Имя: «…»») — бормочем «по-симски».
 	var i := text.find(": «")
 	if i > 0 and i < 30:

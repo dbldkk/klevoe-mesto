@@ -19,6 +19,15 @@ func _ready() -> void:
 	add_child(radial)
 	_spawn_officers()
 	_spawn_village()
+	var clinic := VillageClinic.new()
+	clinic.name = "Clinic"
+	add_child(clinic)
+	var mayhem := VillageMayhem.new()
+	mayhem.name = "VillageMayhem"
+	add_child(mayhem)
+	var goose := AngryGoose.new()
+	goose.name = "Goose"
+	add_child(goose)
 	spawner.add_spawnable_scene(PLAYER_SCENE_PATH)
 	Net.player_registered.connect(_on_player_registered)
 	Net.server_lost.connect(_on_server_lost)
@@ -31,7 +40,7 @@ func _ready() -> void:
 ## Оптимизация: склеиваем неподвижные кусочки построек, деревьев и улицы (см. MeshBaker).
 const BAKE := ["Decor", "Street", "Shop", "Casino", "LiquorStore", "House", "Club", "Farm", "PoliceStation",
 	"Market", "Garage", "BusStop", "RepairJob", "Babka", "InspectorPost", "Pier", "Thimbles",
-	"VillageLife/Static", "StripClub/Static"]
+	"VillageLife/Static", "StripClub/Static", "Clinic/Static"]
 
 
 

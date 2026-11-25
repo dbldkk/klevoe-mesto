@@ -209,7 +209,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
-	move_and_slide()
+	NpcMotion.move(self, delta)
 	if global_position.y < -6.0:
 		global_position = Farm.pasture_point(0, 0) + Vector3.UP
 

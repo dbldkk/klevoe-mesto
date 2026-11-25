@@ -12,7 +12,7 @@ extends Node3D
 @export var picky: float = 0.3
 
 ## Барабаны слотов: символ, вес.
-const REELS := [["poop", 30], ["bread", 25], ["beer", 20], ["vodka", 12], ["pike", 8], ["golden", 5]]
+const REELS := [["poop", 27], ["bread", 26], ["beer", 21], ["vodka", 13], ["pike", 8], ["golden", 5]]
 ## Три одинаковых: множитель. Две одинаковые (не какашки): x2, два золотых: x4.
 const TRIPLE := {"poop": 0, "bread": 5, "beer": 8, "vodka": 15, "pike": 30, "golden": 100}
 const RED := [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]

@@ -17,6 +17,7 @@ func open(back_group: String) -> void:
 		body.remove_child(child)
 		child.queue_free()
 	var rows := [
+		"После самогона потемнело в глазах? Q → «Позвать врача». Колокольчик приведёт к бесплатной больнице за домом.",
 		"1. Дойди до берега. Выбери удочку клавишей 1.",
 		"2. Зажми %s и отпусти — сила заброса зависит от удержания." % Controls.key_label("fish_action"),
 		"3. Поплавок играет — жди. Утонул — нажми %s для подсечки." % Controls.key_label("fish_action"),

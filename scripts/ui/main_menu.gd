@@ -36,6 +36,7 @@ func _ready() -> void:
 	v.add_child(UiKit.title("КЛЁВОЕ МЕСТО"))
 	var sub := UiKit.label("кооперативная рыбалка · пей, лови, торгуйся", 16, Color(1, 1, 1, 0.55))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.text += " · v" + str(ProjectSettings.get_setting("application/config/version", ""))
 	v.add_child(sub)
 
 	var name_row := HBoxContainer.new()

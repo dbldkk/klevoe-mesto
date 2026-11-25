@@ -202,6 +202,8 @@ func _physics_process(delta: float) -> void:
 		_scan = 0.5
 		_look_around()
 	var goal := Vector3.INF
+	velocity.x = 0.0
+	velocity.z = 0.0
 	var spd := WALK
 	match state:
 		S.ESCORT:
@@ -257,9 +259,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
-	move_and_slide()
-	if global_position.y < -10.0:
-		global_position = _wp[0] + Vector3.UP
+	NpcMotion.move(self, delta)
 
 
 ## Угол точки на кольце дороги (градусы).

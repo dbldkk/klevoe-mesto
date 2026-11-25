@@ -22,6 +22,8 @@ var slots: Array = []
 var selected: int = 0
 var equipped_bait: StringName = &""
 var basket: Array[Dictionary] = []   ## садок: [{id, kg}]
+var blindness: float = 0.0
+var goose_loot: Array = []
 var drunk: float = 0.0
 var health: float = MAX_HEALTH
 var satiety: float = 100.0           ## сытость: 100 — сыт, 0 — голоден
@@ -55,6 +57,8 @@ func reset() -> void:
 	add_item("food", &"crackers", 1, false)
 	equipped_bait = &"bread"
 	basket = []
+	blindness = 0.0
+	goose_loot = []
 	drunk = 0.0
 	health = MAX_HEALTH
 	satiety = 100.0
@@ -392,7 +396,7 @@ func damage(amount: float) -> void:
 # ------------------------------------------------------------ рыба
 
 func add_fish(id: StringName, kg: float) -> void:
-	basket.append({"id": id, "kg": kg})
+	basket.append({"id": id, "kg": kg, "talking":false})
 	stat_add("caught")
 	var counts: Dictionary = stats.get("fish_count", {})
 	counts[String(id)] = int(counts.get(String(id), 0)) + 1
@@ -597,9 +601,9 @@ func to_dict() -> Dictionary:
 			out_slots.append(e)
 	var fish_list := []
 	for e in basket:
-		fish_list.append({"id": String(e.id), "kg": e.kg})
+		fish_list.append({"id": String(e.id), "kg": e.kg, "talking":bool(e.get("talking",false))})
 	return {
-		"version": 3,
+		"version": 4, "blindness":blindness, "goose_loot":goose_loot,
 		"money": money, "slots": out_slots, "selected": selected,
 		"equipped_bait": String(equipped_bait), "basket": fish_list,
 		"drunk": drunk, "health": health, "satiety": satiety,
@@ -630,7 +634,13 @@ func from_dict(d: Dictionary) -> void:
 	basket.clear()
 	for e in d.get("basket", []):
 		if GameData.get_fish(StringName(e.id)):
-			basket.append({"id": StringName(e.id), "kg": float(e.kg)})
+			basket.append({"id": StringName(e.id), "kg": float(e.kg), "talking":bool(e.get("talking",false))})
+	blindness = clampf(float(d.get("blindness",0.0)),0.0,1.0)
+	var loot = d.get("goose_loot",[])
+	if loot is Array:
+		for item in loot:
+			if item is Dictionary and _valid_item(str(item.get("kind","")),StringName(item.get("id",""))):
+				goose_loot.append(item.duplicate())
 	drunk = float(d.get("drunk", 0.0))
 	health = float(d.get("health", MAX_HEALTH))
 	satiety = float(d.get("satiety", 100.0))

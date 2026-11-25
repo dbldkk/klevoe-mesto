@@ -43,7 +43,7 @@ const LINGERIE_COLORS := [Color(0.08, 0.07, 0.08), Color(0.48, 0.08, 0.14), Colo
 ## "sleep", "swing", "punch", "smoke", "bait", "carry"
 ## Если true, каждый кадр подтягивает position.y к 0 (ноги на полу родителя).
 ## Выключить, если персонаж стоит на возвышении (сцена, пилон и т.п.).
-var settle_floor: bool = true
+var settle_floor: bool = false
 var pose: String = "idle"
 var fish_state: int = 0
 var _last_fish_state: int = -1
@@ -78,6 +78,11 @@ var _last_pose := ""
 var _built := false
 var _shown_flush := -1.0
 var _shown_dirty := false
+var _lod_t := 0.0
+var _anim_accum := 0.0
+var _anim_interval := 0.0
+var _far_proxy: Node3D
+var _far := false
 
 
 func _ready() -> void:
@@ -350,6 +355,9 @@ func restyle() -> void:
 	_held_kind = ""
 	_rod_tip = null
 	_box = null
+	_far_proxy = null
+	_far = false
+	_lod_t = 0.0
 	_built = false
 	scale = Vector3.ONE
 	_build()
@@ -465,11 +473,38 @@ func _update_materials() -> void:
 		_pants_mat.albedo_color = pants.lerp(Color(0.35, 0.25, 0.08), 0.55) if stinky else pants
 
 
+func _update_lod() -> void:
+	var cam := get_viewport().get_camera_3d()
+	var dist := cam.global_position.distance_to(global_position) if cam else 0.0
+	_far = dist > 30.0
+	_anim_interval = 1.0 / 30.0 if dist > 16.0 else 0.0
+	if _far and not is_instance_valid(_far_proxy):
+		_far_proxy = Node3D.new()
+		add_child(_far_proxy)
+		Art.add_mesh(_far_proxy, Art.capsule(0.24, 0.75), Art.color(shirt), Vector3(0, 1.14, 0))
+		Art.add_mesh(_far_proxy, Art.capsule(0.18, 0.8), Art.color(pants), Vector3(0, 0.43, 0))
+		Art.add_mesh(_far_proxy, Art.sphere(0.23, 8), Art.color(skin), Vector3(0, 1.73, 0))
+		for child in _far_proxy.get_children():
+			(child as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	hips.visible = not _far
+	if is_instance_valid(_far_proxy):
+		_far_proxy.visible = _far and dist < 90.0
+
+
 # ------------------------------------------------------------ анимация
 
 func _process(delta: float) -> void:
 	if not _built:
 		return
+	_lod_t -= delta
+	_anim_accum += delta
+	if _lod_t <= 0.0:
+		_lod_t = 0.25
+		_update_lod()
+	if _far or _anim_accum < _anim_interval:
+		return
+	delta = minf(_anim_accum, 0.2)
+	_anim_accum = 0.0
 	_t += delta
 	if pose != _last_pose:
 		_last_pose = pose
@@ -482,7 +517,7 @@ func _process(delta: float) -> void:
 	var amp := clampf(speed / 4.5, 0.0, 1.3)
 	_phase += delta * (4.0 + speed * 1.6) * (1.0 if amp > 0.05 else 0.0)
 	var s := sin(_phase)
-	var k := delta * 12.0
+	var k := 1.0 - exp(-delta * 12.0)
 
 	var tgt := {
 		"hips_y": 0.9 + absf(s) * 0.04 * amp, "root_x": 0.0, "spine_x": 0.05 * amp,
@@ -563,12 +598,12 @@ func _process(delta: float) -> void:
 	rotation.x = lerp_angle(rotation.x, tgt.root_x, k * 0.5)
 	hips.position.y = lerpf(hips.position.y, tgt.hips_y, k)
 	spine.rotation.x = lerp_angle(spine.rotation.x, tgt.spine_x, k)
-	spine.rotation.y = lerp_angle(spine.rotation.y, tgt.spine_y, k * 1.5)
+	spine.rotation.y = lerp_angle(spine.rotation.y, tgt.spine_y, minf(k * 1.5, 1.0))
 	leg_l.rotation.x = lerp_angle(leg_l.rotation.x, tgt.leg_l, k)
 	leg_r.rotation.x = lerp_angle(leg_r.rotation.x, tgt.leg_r, k)
 	knee_l.rotation.x = lerp_angle(knee_l.rotation.x, tgt.knee_l, k)
 	knee_r.rotation.x = lerp_angle(knee_r.rotation.x, tgt.knee_r, k)
-	var ka := k * (2.5 if pose == "swing" or pose == "punch" else 1.0)
+	var ka := minf(k * (2.5 if pose == "swing" or pose == "punch" else 1.0), 1.0)
 	arm_l.rotation.x = lerp_angle(arm_l.rotation.x, tgt.arm_l, ka)
 	arm_r.rotation.x = lerp_angle(arm_r.rotation.x, tgt.arm_r, ka)
 	arm_l.rotation.z = lerp_angle(arm_l.rotation.z, tgt.arm_lz, k)

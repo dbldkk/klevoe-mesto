@@ -189,7 +189,13 @@ func _show_detail(index: int) -> void:
 	if s.kind == "drink":
 		_action_btn("Выпить", func() -> void: _drink(index))
 	_action_btn("Выбросить", func() -> void:
-		Inventory.remove_slot(index, s.count)
+		if s.kind == "tool" and s.id == &"bucket":
+			var m := get_tree().get_first_node_in_group("mischief")
+			if m:
+				close()
+				m.drop_bucket()
+		else:
+			Inventory.remove_slot(index, s.count)
 		_show_detail(index))
 
 
@@ -210,12 +216,13 @@ func _quick_use(index: int) -> void:
 		Inventory.equip_bait(s.id)
 
 
-func _to_hotbar(index: int) -> void:
+func _to_hotbar(index: int) -> int:
 	for i in Inventory.HOTBAR:
 		if Inventory.slot(i) == null:
 			Inventory.move_slot(index, i)
-			return
+			return i
 	Inventory.move_slot(index, Inventory.selected)
+	return Inventory.selected
 
 
 func _eat(index: int) -> void:
@@ -229,10 +236,7 @@ func _drink(index: int) -> void:
 	if index < Inventory.HOTBAR:
 		Inventory.select(index)
 	else:
-		_to_hotbar(index)
-		var i := Inventory.first_of_kind("drink")
-		if i >= 0 and i < Inventory.HOTBAR:
-			Inventory.select(i)
+		Inventory.select(_to_hotbar(index))
 	close()
 	var p := get_tree().get_first_node_in_group("local_player")
 	if p:

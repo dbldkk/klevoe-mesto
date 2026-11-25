@@ -57,6 +57,7 @@ func _fs_text() -> String:
 
 
 func open() -> void:
+	Sfx.stop_voices()
 	visible = true
 	Events.ui_open = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

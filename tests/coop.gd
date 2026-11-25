@@ -39,6 +39,13 @@ func _begin() -> void:
 		check(Saves.create_world(world_id) == "", "host creates isolated world")
 		Saves.set_section("nets", {"list": [["QA Host", 0.0, 0.0, [["perch", 1.0]]]]})
 		check(Net.host(18778) == OK, "host listens on test port")
+		get_tree().get_first_node_in_group("village_mayhem").show_pollution(Vector3(0,Terrain.WATER_Y,-31),75)
+		Net.player_registered.connect(func(peer: int,_data: Dictionary) -> void:
+			if peer!=1:
+				var goose := get_tree().get_first_node_in_group("goose")
+				goose.set_physics_process(false)
+				goose.global_position = NpcMotion.safe_point(Layout.spawn()+Vector3(3,0,0))
+				goose.target_peer = peer)
 		print("HOST_READY")
 	else:
 		check(Net.join("127.0.0.1", 18778) == OK, "client starts connection")
@@ -56,25 +63,38 @@ func _process(_delta: float) -> void:
 		if Net.peer_profiles.values().has("qa_coop_client"):
 			saw_client = true
 		var data := Saves.get_player("qa_coop_client")
-		if data.get("inventory", {}).get("money", 0) == 1234:
+		if not second_connection and data.get("inventory", {}).get("money", 0) == 1234:
+			second_connection = true
 			check(saw_client, "host registered remote player")
 			check(get_tree().get_nodes_in_group("players").size() == 2, "both players replicated on host")
 			check(nets._nets.size() == 1, "client connection preserves host nets")
 			check(Saves.save_world(), "host saves remote inventory")
+			check(data.inventory.get("blindness",0)==1.0,"host saves remote blindness")
 			print("SNAPSHOT_STORED")
 			# Let client finish and receive its final snapshot.
+			await get_tree().create_timer(0.4).timeout
+			check(not get_tree().root.get_node("World/VillageMayhem").get_children().filter(func(n):return n is ComicRagdoll).is_empty(),"client ragdoll event arrives on host")
+		if second_connection and bool(data.get("inventory",{}).get("stats",{}).get("qa_reconnected",false)):
 			done = true
-			await get_tree().create_timer(12.0).timeout
+			await get_tree().create_timer(1.2).timeout
 			check(Saves.get_player("qa_coop_client").get("inventory", {}).get("money", 0) == 1234,
 				"client inventory retained after reconnection")
 			_finish()
 	else:
 		var p := get_tree().get_first_node_in_group("local_player")
-		if client_stage == 0 and p and nets._vis.size() == 1:
+		var goose := get_tree().get_first_node_in_group("goose")
+		if client_stage == 0 and p and nets._vis.size() == 1 and goose.target_peer==multiplayer.get_unique_id():
 			check(get_tree().get_nodes_in_group("players").size() == 2, "client sees both players")
 			check(nets._vis.values()[0].count == 1, "client receives existing net with catch")
+			check(get_tree().get_first_node_in_group("clinic")!=null,"client has clinic")
+			check(get_tree().get_first_node_in_group("goose")!=null,"client has synchronized goose")
+			check(goose.global_position.distance_to(NpcMotion.safe_point(Layout.spawn()+Vector3(3,0,0)))<0.5,"client receives goose position and target from server")
+			check(get_tree().get_first_node_in_group("village_mayhem").patches.size()==1,"late client receives active water pollution")
 			Inventory.money = 1234
+			Inventory.blindness = 1.0
 			Net.send_snapshot()
+			var mischief := p.get_node("Mischief")
+			mischief.start_ragdoll()
 			client_stage = 1
 			phase_start = Time.get_ticks_msec()
 		elif client_stage == 1 and Time.get_ticks_msec() - phase_start > 1200:
@@ -91,7 +111,12 @@ func _process(_delta: float) -> void:
 			client_stage = 3
 			check(Net.join("127.0.0.1", 18778) == OK, "client reconnects")
 		elif client_stage == 3 and p:
+			client_stage = 4
 			check(Inventory.money == 1234, "client receives saved inventory on reconnect")
+			check(Inventory.blindness==1.0,"client receives saved blindness on reconnect")
+			Inventory.stats["qa_reconnected"] = true
+			Net.send_snapshot()
+			await get_tree().create_timer(0.3).timeout
 			_finish()
 
 

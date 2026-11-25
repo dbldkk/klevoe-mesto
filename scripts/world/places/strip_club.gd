@@ -98,16 +98,6 @@ func _build(st: Node3D) -> void:
 	cyan.omni_range = 8.0
 	cyan.position = Vector3(0, 2.6, -2.6)
 	st.add_child(cyan)
-	var music := AudioStreamPlayer3D.new()
-	music.stream = Sfx.stream_of("club_music")
-	music.bus = "Music"
-	music.unit_size = 9.0
-	music.max_distance = 40.0
-	music.volume_db = -8.0
-	music.position = Vector3(0, 1.5, -1.0)
-	st.add_child(music)
-	if music.stream:
-		music.play()
 	Build.board_sign(self, Vector3(0, 0.0, 5.6), "КЛУБ «НЕОН» · 200 ₽", 0.0, Vector2(1.4, 0.36), 2.5)
 
 
@@ -177,8 +167,8 @@ func _spawn_people() -> void:
 		_notes.append(_make_notes(d))
 		var lbl := Label3D.new()
 		lbl.text = String(def["name"])
-		lbl.font_size = 42
-		lbl.pixel_size = 0.012
+		lbl.font_size = 32
+		lbl.pixel_size = 0.006
 		lbl.position = Vector3(0, 2.15, 0)
 		lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lbl.modulate = Color(1.0, 0.75, 0.88)
@@ -192,9 +182,13 @@ func _spawn_people() -> void:
 	var priv := _Tip.new()
 	priv.club = self
 	priv.kind = "private"
-	priv.position = Vector3(0, 1.0, -1.4)
+	priv.position = Vector3(2.9, 1.0, -1.5)
 	add_child(priv)
 
+	var bar_service := _Bar.new()
+	bar_service.name = "BarService"
+	add_child(bar_service)
+	Build.talk_area(self,Vector3(-2.9,1.1,1.2),Vector3(1.4,1.7,2.8),bar_service)
 	# бармен
 	var bar := CharacterModel.new()
 	bar.position = Vector3(-4.2, 0, 1.2)
@@ -232,6 +226,11 @@ func _make_notes(at: Node3D) -> CPUParticles3D:
 
 
 func _process(delta: float) -> void:
+	if not Net.is_online():
+		return
+	var local := get_tree().get_first_node_in_group("local_player") as Node3D
+	if local and local.global_position.distance_to(global_position)>50 and _private_t<=0:
+		return
 	_t += delta
 	for i in _dancers.size():
 		var d := _dancers[i]
@@ -270,6 +269,7 @@ func _process(delta: float) -> void:
 			_fade.visible = a > 0.02
 		if _private_t <= 0.0:
 			_fade.visible = false
+			Events.ui_open = Sfx.menus_block_voice()
 			Events.notify("Шоу окончено. Чаевые уже в кассе.", Color(0.95, 0.7, 0.85))
 
 
@@ -355,8 +355,8 @@ func _confirm_tip(amount: int) -> void:
 	NetUtil.call_all(self, "tip_fx", [idx, amount])
 
 
-func get_prompt(_player: Node) -> String:
-	if _inside:
+func get_prompt(player: Node) -> String:
+	if _is_inside(player):
 		return "Выйти из «Неона»"
 	var why := entry_reason(Inventory.money, Inventory.drunk)
 	if why == "drunk":
@@ -367,7 +367,7 @@ func get_prompt(_player: Node) -> String:
 
 
 func interact(player: Node) -> void:
-	if _inside:
+	if _is_inside(player):
 		_inside = false
 		if player is Node3D:
 			(player as Node3D).global_position = to_global(Vector3(0, 0.2, 6.4))
@@ -423,7 +423,7 @@ func tip_fx(idx: int, amount: int) -> void:
 		_notes[idx].emitting = true
 	var nm := _dancer_names[idx] if idx < _dancer_names.size() else "Танцовщица"
 	var line := _tip_line(idx, amount)
-	Events.notify("%s: «%s»" % [nm, line], Color(1.0, 0.7, 0.85))
+	Events.notify("%s: «%s»" % [nm, line], Color(1.0, 0.7, 0.85), false)
 	var d := _dancers[idx]
 	var pos := d.global_position + Vector3(0, 1.7, 0)
 	var speaker := _dancer_ids[idx] if idx < _dancer_ids.size() else "alina"
@@ -444,11 +444,17 @@ func _tip_line(idx: int, amount: int) -> String:
 
 
 func _private_dance(player: Node) -> void:
+	if _private_t > 0 or not _is_inside(player):
+		return
 	if Inventory.money < PRIVATE:
 		Events.notify("Приват — %d ₽. Не хватает." % PRIVATE, Color.TOMATO)
 		return
 	Inventory.money -= PRIVATE
 	Inventory.changed.emit()
+	if _private_t > 0:
+		return
+	Events.ui_open = true
+	player.fishing.cancel()
 	_private_t = 4.0
 	if _fade:
 		_fade.visible = true
@@ -456,7 +462,7 @@ func _private_dance(player: Node) -> void:
 	Events.notify("Свет гаснет. Дальше — только музыка.", Color(0.8, 0.8, 0.85))
 
 
-class _Tip extends Area3D:
+class _Tip extends Interactable:
 	var club: Node
 	var kind := "tip"
 	var dancer_idx := -1
@@ -466,7 +472,7 @@ class _Tip extends Area3D:
 		collision_mask = 0
 		var cs := CollisionShape3D.new()
 		var sh := BoxShape3D.new()
-		sh.size = Vector3(1.2, 2.0, 1.0) if kind == "tip" else Vector3(2.4, 2.2, 1.6)
+		sh.size = Vector3(1.2, 2.0, 1.0) if kind == "tip" else Vector3(0.8, 2.0, 0.7)
 		cs.shape = sh
 		add_child(cs)
 
@@ -479,9 +485,33 @@ class _Tip extends Area3D:
 		return "Дать денег %s (50 / 100 / 500 ₽)" % nm
 
 	func interact(player: Node) -> void:
-		if club == null:
+		if club == null or not club._is_inside(player):
 			return
 		if kind == "private" and club.has_method("_private_dance"):
 			club._private_dance(player)
 		elif club.has_method("tip_dancer"):
 			club.tip_dancer(dancer_idx)
+
+
+func _is_inside(player: Node3D) -> bool:
+	var p := to_local(player.global_position)
+	return absf(p.x)<5.9 and p.z>-4.9 and p.z<4.8 and p.y>-0.5 and p.y<4.8
+
+
+class _Bar extends Node:
+	const GOODS := [["drink",&"beer"],["drink",&"wine"],["drink",&"champagne"],["food",&"crackers"]]
+	func store_title() -> String:
+		return "БАР «НЕОН»"
+	func seller_name() -> String:
+		return "Бармен Слава"
+	func greeting() -> String:
+		return "Меню короткое. Истории после третьего бокала — длинные."
+	func price_of(kind: String,id: StringName) -> int:
+		return roundi(GameData.item_price(kind,id)*1.15)
+	func get_prompt(_p: Node) -> String:
+		return "Бар «Неон»: напитки и закуска"
+	func interact(p: Node) -> void:
+		if get_parent()._is_inside(p):
+			var ui := get_tree().get_first_node_in_group("store_ui")
+			if ui:
+				ui.open(self)

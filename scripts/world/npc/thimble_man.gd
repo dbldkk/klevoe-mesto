@@ -107,12 +107,16 @@ func announce(text: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not Net.is_online():
+		return
 	_update_visual(delta)
 	if not multiplayer.is_server():
 		return
 	if not is_on_floor():
 		velocity.y -= _gravity * delta
 	var goal := Vector3.INF
+	velocity.x = 0.0
+	velocity.z = 0.0
 	match state:
 		S.HOSTILE:
 			_timer -= delta
@@ -152,7 +156,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
-	move_and_slide()
+	NpcMotion.move(self, delta)
 
 
 func _face(p: Vector3, w: float) -> void:
