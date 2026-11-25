@@ -162,11 +162,11 @@ func _apply_lighting(force: bool) -> void:
 	_sky_mat.set_shader_parameter("night", 1.0 - day_k)
 
 	env.ambient_light_sky_contribution = 0.25 + 0.75 * day_k
-	env.ambient_light_color = Color(0.16, 0.2, 0.34)
-	env.ambient_light_energy = 0.45 + 0.25 * day_k
-	env.fog_light_color = hor.lerp(Color(0.05, 0.06, 0.1), 1.0 - day_k)
-	env.fog_density = lerpf(0.004, 0.0012, day_k)
-	env.tonemap_exposure = lerpf(1.35, 0.92, day_k)
+	env.ambient_light_color = Color(0.18, 0.19, 0.22)
+	env.ambient_light_energy = 0.4 + 0.22 * day_k
+	env.fog_light_color = hor.lerp(Color(0.07, 0.07, 0.08), 1.0 - day_k)
+	env.fog_density = lerpf(0.005, 0.0016, day_k)
+	env.tonemap_exposure = lerpf(1.22, 0.86, day_k)
 
 	var weather := get_tree().get_first_node_in_group("weather") as Weather if is_inside_tree() else null
 	if weather:

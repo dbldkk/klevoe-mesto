@@ -12,7 +12,8 @@ static func tex(name: String, uv_scale: float = 1.0, roughness: float = 0.9) -> 
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = load("res://art/textures/%s.png" % name)
 	m.uv1_scale = Vector3(uv_scale, uv_scale, uv_scale)
-	m.roughness = roughness
+	m.albedo_color = Color(0.93, 0.92, 0.9)
+	m.roughness = clampf(roughness + 0.06, 0.0, 1.0)
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	_cache[key] = m
 	return m
@@ -37,8 +38,8 @@ static func color(c: Color, roughness: float = 0.8, metallic: float = 0.0) -> St
 	if _cache.has(key):
 		return _cache[key]
 	var m := StandardMaterial3D.new()
-	m.albedo_color = c
-	m.roughness = roughness
+	m.albedo_color = Color.from_hsv(c.h, clampf(c.s * 0.86, 0.0, 1.0), clampf(c.v * 0.97, 0.0, 1.0), c.a)
+	m.roughness = clampf(roughness + 0.04, 0.0, 1.0)
 	m.metallic = metallic
 	if c.a < 1.0:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

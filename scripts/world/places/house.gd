@@ -41,6 +41,11 @@ func _ready() -> void:
 	for wpos in [[Vector3(2.6, 1.6, D / 2), 0.0], [Vector3(-2.6, 1.6, D / 2), 0.0], [Vector3(W / 2, 1.6, 0.0), PI / 2]]:
 		var win := Build.window(self, wpos[0], Vector2(1.4, 1.0), wpos[1])
 		Build.nalichnik(win, Vector2(1.4, 1.0))
+	# лёгкий износ у цоколя
+	var stain := Art.color(Color(0.28, 0.24, 0.18, 0.35), 1.0)
+	for sx in [-3.2, -1.1, 1.4, 3.1]:
+		Art.add_mesh(self, Art.box(Vector3(0.9, 0.28, 0.04)), stain, Vector3(sx, 0.22, D / 2 + 0.05))
+
 	Build.lamp(self, Vector3(0, H - 0.4, 0), 1.1, 9.0, Color(1, 0.85, 0.6))
 	Art.add_mesh(self, Art.sphere(0.14, 10), Build.glow_mat(Color(1, 0.9, 0.7), 3.0), Vector3(0, H - 0.25, 0))
 	_bed()

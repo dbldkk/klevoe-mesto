@@ -13,8 +13,8 @@ const AREA_Z0 := -204.0   ## на севере — до Дальнего плё�
 const SHADER := """
 shader_type spatial;
 render_mode cull_disabled, diffuse_lambert, specular_disabled;
-uniform vec3 base_color : source_color = vec3(0.2, 0.33, 0.1);
-uniform vec3 tip_color : source_color = vec3(0.52, 0.66, 0.26);
+uniform vec3 base_color : source_color = vec3(0.18, 0.26, 0.12);
+uniform vec3 tip_color : source_color = vec3(0.42, 0.5, 0.28);
 uniform float wind = 0.12;
 varying float h;
 void vertex() {

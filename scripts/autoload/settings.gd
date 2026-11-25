@@ -100,6 +100,8 @@ func apply_world() -> void:
 		var l := world.get_node_or_null(n) as DirectionalLight3D
 		if l:
 			l.shadow_enabled = quality >= 1
+			l.shadow_blur = 1.8 if quality >= 1 else 1.0
+			l.light_angular_distance = 0.8 if n == "Sun" else 0.5
 			l.directional_shadow_max_distance = [40.0, 55.0, 70.0, 100.0][quality] * (0.7 if n == "Moon" else 1.0)
 			l.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL if quality == 0 else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	RenderingServer.directional_shadow_atlas_set_size([1024, 2048, 4096, 4096][quality], true)
