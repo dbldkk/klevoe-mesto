@@ -22,9 +22,9 @@ func open(back_group: String) -> void:
 		"3. Поплавок играет — жди. Утонул — нажми %s для подсечки." % Controls.key_label("fish_action"),
 		"4. Подматывай с паузами. На рывке веди удочку против рыбы; при прыжке отпусти кнопку.",
 		"5. Продай улов Дяде Толе на рынке. Там же можно починить удочку.",
-		"%s — наживка · %s — инвентарь · %s — карта · %s — отпустить рыбу" % [
+		"%s — наживка · %s — инвентарь · %s — карта · %s — отпустить рыбу · %s — действия (туалет, тост, фонарик)" % [
 			Controls.key_label("cycle_bait"), Controls.key_label("inventory"),
-			Controls.key_label("map"), Controls.key_label("release_fish")],
+			Controls.key_label("map"), Controls.key_label("release_fish"), Controls.key_label("radial")],
 		"Друзья: хост создаёт мир, остальные вводят его IP. В Интернете нужен UDP 7777 или общая VPN-сеть.",
 	]
 	for text in rows:

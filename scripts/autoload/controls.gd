@@ -8,16 +8,10 @@ const HELP := [
 	["1-9", "выбрать ячейку (или колесо)"],
 	["release_fish", "отпустить рыбу"],
 	["cycle_bait", "сменить наживку"],
-	["interact", "взять · говорить · спрятаться · лечь"],
-	["gift", "угостить выпивкой"],
-	["pee", "туалет: малый"],
-	["poop", "туалет: большой"],
-	["drop_cart", "выложить корзину"],
+	["interact", "взять · говорить · спрятаться · лечь · копать в камере"],
+	["radial", "колесо действий (туалет, тост, фонарик, угостить…)"],
 	["inventory", "инвентарь"],
 	["map", "карта"],
-	["flashlight", "фонарик"],
-	["toast", "поднять тост"],
-	["dispute", "поспорить (глядя на игрока)"],
 	["accept", "принять спор / предложение"],
 	["E в транспорте", "выйти · W/S газ · A/D руль"],
 	["toggle_camera", "камера 1/3 лица"],
@@ -31,10 +25,10 @@ const HELP := [
 const REBIND := [
 	["move_forward", "Вперёд"], ["move_back", "Назад"], ["move_left", "Влево"], ["move_right", "Вправо"],
 	["jump", "Прыжок"], ["sprint", "Бег"], ["interact", "Действие (E)"], ["fish_action", "Заброс / удар"],
-	["release_fish", "Отпустить рыбу"], ["cycle_bait", "Сменить наживку"], ["gift", "Угостить"],
-	["pee", "Туалет: малый"], ["poop", "Туалет: большой"], ["drop_cart", "Выложить корзину"],
-	["inventory", "Инвентарь"], ["map", "Карта"], ["flashlight", "Фонарик"], ["toast", "Тост"],
-	["dispute", "Поспорить"], ["accept", "Принять"], ["toggle_camera", "Камера"], ["toggle_help", "Подсказка"],
+	["release_fish", "Отпустить рыбу"], ["cycle_bait", "Сменить наживку"],
+	["radial", "Колесо действий (Q)"],
+	["inventory", "Инвентарь"], ["map", "Карта"],
+	["accept", "Принять"], ["toggle_camera", "Камера"], ["toggle_help", "Подсказка"],
 ]
 
 var _defaults: Dictionary = {}
@@ -126,19 +120,17 @@ func _ready() -> void:
 	_key("sprint", KEY_SHIFT)
 	_key("toggle_camera", KEY_V)
 	_key("interact", KEY_E)
-	_key("gift", KEY_G)
 	_key("release_fish", KEY_R)
 	_key("cycle_bait", KEY_B)
-	_key("pee", KEY_N)
-	_key("poop", KEY_M)
-	_key("drop_cart", KEY_C)
+	_key("radial", KEY_Q)
 	_key("inventory", KEY_TAB)
 	_key("toggle_help", KEY_F1)
 	_key("map", KEY_K)
-	_key("flashlight", KEY_F)
-	_key("toast", KEY_T)
-	_key("dispute", KEY_Z)
 	_key("accept", KEY_Y)
+	# Редкие действия (туалет, тост, фонарик, угостить, корзина, спор) — в колесе на Q.
+	# Действия оставляем в InputMap без клавиш, чтобы старые профили не ломались.
+	_ensure("gift"); _ensure("pee"); _ensure("poop"); _ensure("drop_cart")
+	_ensure("flashlight"); _ensure("toast"); _ensure("dispute")
 	_key("fullscreen", KEY_F11)
 	for i in 9:
 		_key("slot_%d" % (i + 1), KEY_1 + i)

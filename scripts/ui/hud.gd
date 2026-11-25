@@ -410,7 +410,7 @@ func _update_held_text() -> void:
 	match s.kind:
 		"rod":
 			_held_hint.text = "ЛКМ — забросить" if s.get("cond", 100.0) > 0 else "сломана — почини у Дяди Толи"
-		"drink": _held_hint.text = "ЛКМ — выпить · G — угостить"
+		"drink": _held_hint.text = "ЛКМ — выпить · Q — угостить или тост"
 		"food": _held_hint.text = "ЛКМ — съесть"
 		"bait": _held_hint.text = "ЛКМ — насадить на крючок"
 		"bottle": _held_hint.text = "ЛКМ — бросить"

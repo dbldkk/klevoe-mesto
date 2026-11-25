@@ -13,6 +13,10 @@ func _ready() -> void:
 	var guide := CanvasLayer.new()
 	guide.set_script(preload("res://scripts/ui/guide_ui.gd"))
 	add_child(guide)
+	var radial := CanvasLayer.new()
+	radial.set_script(preload("res://scripts/ui/radial_menu.gd"))
+	radial.name = "RadialMenu"
+	add_child(radial)
 	spawner.add_spawnable_scene(PLAYER_SCENE_PATH)
 	Net.player_registered.connect(_on_player_registered)
 	Net.server_lost.connect(_on_server_lost)
