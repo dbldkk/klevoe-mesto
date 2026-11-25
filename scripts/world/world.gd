@@ -17,6 +17,7 @@ func _ready() -> void:
 	radial.set_script(preload("res://scripts/ui/radial_menu.gd"))
 	radial.name = "RadialMenu"
 	add_child(radial)
+	_spawn_officers()
 	spawner.add_spawnable_scene(PLAYER_SCENE_PATH)
 	Net.player_registered.connect(_on_player_registered)
 	Net.server_lost.connect(_on_server_lost)
@@ -92,3 +93,14 @@ func _on_server_lost() -> void:
 	Events.ui_open = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().reload_current_scene()
+
+
+func _spawn_officers() -> void:
+	# Петрович уже есть в сцене. Добавляем ещё двух участковых — у всех клиентов одинаково.
+	if get_node_or_null("PoliceSemenov") != null:
+		return
+	for spec in [["PoliceSemenov", "semenov"], ["PoliceNina", "nina"]]:
+		var o := Police.new()
+		o.name = spec[0]
+		o.officer_key = spec[1]
+		add_child(o)

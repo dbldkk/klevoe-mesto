@@ -17,6 +17,7 @@ var _bush_mats: Array[StandardMaterial3D] = []
 
 
 func _ready() -> void:
+	add_to_group("decor")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var bark := Art.tex("bark", 1.0)
@@ -89,6 +90,9 @@ func _ready() -> void:
 			Vector3(p.x, Terrain.height(p.x, p.y) + r * 0.2, p.y),
 			Vector3(rng.randf(), rng.randf() * TAU, rng.randf()), Vector3(1.3, 0.7, 1.0))
 		rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	# На всякий случай вычищаем участок опорного: куст не должен торчать в камере.
+	_strip_spot("police", 10.0)
+	call_deferred("_strip_station_aabb")
 
 
 func _pine(tree: Node3D, bark: Material, leaves: Material, rng: RandomNumberGenerator) -> void:
@@ -132,7 +136,26 @@ func _is_free(p: Vector2, lake_margin: float) -> bool:
 		return false
 	if Layout.is_busy(p.x, p.y, 3.5):   # дорога и постройки
 		return false
+	if Layout.spot_contains("police", p.x, p.y, 8.0):
+		return false
 	for zone in _keep_clear:
 		if p.distance_to(zone[0]) < zone[1]:
 			return false
 	return true
+
+
+func _strip_spot(spot: String, pad: float) -> void:
+	for c in get_children():
+		if c is Node3D and Layout.spot_contains(spot, c.global_position.x, c.global_position.z, pad):
+			c.queue_free()
+
+func _strip_station_aabb() -> void:
+	var st := get_tree().get_first_node_in_group("police_station") as Node3D
+	if st == null:
+		return
+	for c in get_children():
+		if not (c is Node3D):
+			continue
+		var l: Vector3 = st.to_local((c as Node3D).global_position)
+		if absf(l.x) < 8.0 and absf(l.z) < 8.0:
+			c.queue_free()

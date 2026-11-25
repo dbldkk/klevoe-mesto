@@ -8,6 +8,7 @@ const H := 3.0
 const CELL := Vector3(-2.3, 0.1, -1.9)
 const OUT := Vector3(1.5, 0.1, 4.6)
 const JAIL_COOP := 120.0
+const JAIL_SOLO := 45.0
 
 
 func _enter_tree() -> void:
@@ -53,6 +54,13 @@ func _ready() -> void:
 	Build.block(self, Vector3((x0 + xb) / 2, H / 2, zb), Vector3(xb - x0, H, 0.06), _invisible(), true).visible = false
 	Build.block(self, Vector3(-2.6, 0.3, -2.4), Vector3(1.4, 0.06, 0.6), wood, true)   # нары
 	Build.text(self, Vector3(-2.2, 2.2, zb + 0.03), "КПЗ", 50, Color(0.9, 0.2, 0.2), 0.006)
+	var dig := preload("res://scripts/world/places/jail_dig.gd").new()
+	dig.name = "JailDig"
+	dig.position = Vector3(-2.4, 0.0, -2.15)
+	add_child(dig)
+	# миска и ложка у нар
+	Art.add_mesh(self, Art.cyl(0.08, 0.09, 0.04, 10), Art.color(Color(0.55, 0.55, 0.5), 0.4, 0.5), Vector3(-1.7, 0.36, -2.35))
+	Art.add_mesh(self, Art.box(Vector3(0.12, 0.012, 0.02)), Art.color(Color(0.6, 0.58, 0.5), 0.45, 0.5), Vector3(-1.62, 0.37, -2.28))
 
 
 func _invisible() -> StandardMaterial3D:
@@ -68,11 +76,8 @@ func jail(peer: int, reason: String, mult := 1.0) -> void:
 	if p == null:
 		return
 	var solo := get_tree().get_nodes_in_group("players").size() <= 1
-	var secs := 6.0 if solo else JAIL_COOP * mult
-	if solo:
-		var dc := get_tree().get_first_node_in_group("day_cycle") as DayCycle
-		if dc:
-			dc.minutes = minf(dc.minutes + 720.0 * mult, DayCycle.FAINT_MIN - 60.0)
+	var secs := (JAIL_SOLO if solo else JAIL_COOP) * mult
+	# Сдвиг времени суток — при выходе, и его можно укоротить, копая ложкой.
 	NetUtil.call_peer(p, peer, "go_to_jail", [secs, to_global(CELL), to_global(OUT), reason, solo])
 	NetUtil.call_all(self, "announce", ["Участковый посадил %s «на сутки»: %s" % [p.player_name, reason]])
 
@@ -80,3 +85,10 @@ func jail(peer: int, reason: String, mult := 1.0) -> void:
 @rpc("authority", "call_remote", "reliable")
 func announce(text: String) -> void:
 	Events.notify(text, Color(0.6, 0.75, 1.0))
+
+
+func cell_is_watched() -> bool:
+	for o in get_tree().get_nodes_in_group("police"):
+		if o.has_method("is_watching_cell") and o.is_watching_cell():
+			return true
+	return false

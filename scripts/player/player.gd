@@ -642,6 +642,9 @@ func _melee_target(reach: float) -> Node:
 
 var _jail_t := 0.0
 var _jail_out := Vector3.ZERO
+var _jail_solo := false
+var _jail_skip := 0.0
+var _digging := false
 
 
 @rpc("any_peer", "reliable")
@@ -674,8 +677,11 @@ func go_to_jail(secs: float, cell: Vector3, out: Vector3, reason: String, solo: 
 	velocity = Vector3.ZERO
 	_jail_t = secs
 	_jail_out = out
-	Events.blackout.emit("«На сутки»: %s. Штраф %d ₽" % [reason, fine] if not solo else "Сутки в обезьяннике… (%s, штраф %d ₽). Прошло полдня" % [reason, fine])
-	Events.notify("Сидишь в КПЗ%s. Протрезвел." % ("" if solo else " (%d с)" % int(secs)), Color(0.6, 0.75, 1.0))
+	_jail_solo = solo
+	_jail_skip = 8.0 if solo else 0.0
+	_digging = false
+	Events.blackout.emit("«На сутки»: %s. Штраф %d ₽" % [reason, fine])
+	Events.notify("Сидишь в КПЗ (%d с). Под нарами — ложка: копай, когда дежурная не смотрит." % int(secs), Color(0.6, 0.75, 1.0))
 
 
 func _tick_jail(delta: float) -> void:
@@ -683,13 +689,59 @@ func _tick_jail(delta: float) -> void:
 		return
 	_jail_t -= delta
 	if _jail_t <= 0.0:
-		global_position = _jail_out
-		velocity = Vector3.ZERO
-		Events.notify("Отпустили. Участковый: «Чтоб я тебя больше не видел!»", Color(0.6, 0.75, 1.0))
+		_release_from_jail()
+
+
+func _release_from_jail() -> void:
+	_jail_t = 0.0
+	_digging = false
+	global_position = _jail_out
+	velocity = Vector3.ZERO
+	if _jail_solo and _jail_skip > 0.05:
+		var dc := get_tree().get_first_node_in_group("day_cycle") as DayCycle
+		if dc:
+			dc.minutes = minf(dc.minutes + _jail_skip * 60.0, DayCycle.FAINT_MIN - 60.0)
+		Events.notify("Отпустили. На улице уже другое время.", Color(0.6, 0.75, 1.0))
+	else:
+		Events.notify("Отпустили. Смотри не попадайся снова.", Color(0.6, 0.75, 1.0))
+	_jail_skip = 0.0
 
 
 func jail_left() -> float:
 	return _jail_t
+
+
+func is_jailed() -> bool:
+	return _jail_t > 0.0
+
+
+func start_jail_dig() -> void:
+	if _jail_t <= 0.0 or fishing.is_busy():
+		return
+	_digging = true
+
+
+func stop_jail_dig() -> void:
+	_digging = false
+
+
+func apply_dig_stroke() -> void:
+	if _jail_t <= 0.0:
+		return
+	_jail_t = maxf(0.4, _jail_t - (6.0 if _jail_solo else 12.0))
+	if _jail_solo:
+		_jail_skip = maxf(0.4, _jail_skip - 0.8)
+	Events.notify("Земля поддалась. Осталось %d с." % int(_jail_t), Color(0.75, 0.85, 0.6))
+	if _jail_t <= 0.5:
+		_release_from_jail()
+
+
+func jail_caught_digging() -> void:
+	_digging = false
+	_jail_t += 15.0
+	if _jail_solo:
+		_jail_skip += 1.0
+	Events.notify("Дежурная видела. Накинули срок.", Color(1.0, 0.5, 0.4))
 
 
 # ------------------------------------------------------------ споры на деньги

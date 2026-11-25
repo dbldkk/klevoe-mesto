@@ -1,7 +1,7 @@
 class_name Police
 extends CharacterBody3D
-## Участковый Петрович. Ходит по посёлку вдоль дороги. Ловит пьяных за рулём, воров и драчунов,
-## на кого нажаловалась бабка, — и сажает «на сутки» в опорный пункт. Решает хост.
+## Участковые посёлка. Ходят своими участками, ловят пьяных за рулём, воров и драчунов.
+## Дежурная сидит в опорном и смотрит в камеру. Решения принимает хост.
 
 enum S { PATROL, CHASE, ESCORT }
 
@@ -13,6 +13,9 @@ const WANTED_TIME := 100.0
 
 @export var state: int = S.PATROL
 @export var target_name: String = ""
+@export var officer_key: String = "petrovich"
+@export var duty: bool = false
+@export var officer_title: String = "Участковый Петрович"
 
 var _target := 0
 var _reason := ""
@@ -35,12 +38,17 @@ const BRIBE_TIME := 14.0
 
 
 func _ready() -> void:
-	var ch := Chatter.attach(self, "m_low", ["Добрый день, гражданин. Пьяным за руль не садимся!", "Ведём себя прилично, я всё вижу.",
-		"Сетями ловить — браконьерство. Семёныч не дремлет.", "Если что — опорный пункт у дороги, заходи.",
-		"Я тут каждого знаю. И тебя тоже.", "Бабе Зое не хами — она мне всё рассказывает."], 2.9, 6.0)
+	_apply_profile()
+	var lines: Array = SpeechBank.petrovich()
+	if officer_key == "semenov":
+		lines = SpeechBank.semenov()
+	elif officer_key == "nina":
+		lines = SpeechBank.nina()
+	var ch := Chatter.attach(self, "m_low" if officer_key != "nina" else "f", lines, 2.9, 6.0)
 	ch.condition = func() -> bool: return state == S.PATROL
 	add_to_group("npc")
 	add_to_group("police")
+	add_to_group("district_officer")
 	collision_layer = 8
 	collision_mask = 1
 	var cs := CollisionShape3D.new()
@@ -51,23 +59,92 @@ func _ready() -> void:
 	cs.position.y = 0.95
 	add_child(cs)
 	model = CharacterModel.new()
-	model.shirt = Color(0.16, 0.22, 0.42)
-	model.pants = Color(0.1, 0.12, 0.2)
-	model.hat = CharacterModel.Hat.CAP
-	model.hat_color = Color(0.12, 0.16, 0.32)
-	model.face_name = "guard"
-	model.height_scale = 1.05
+	_style_model()
 	add_child(model)
-	_label = Build.text(self, Vector3(0, 2.25, 0), "Участковый Петрович", 36, Color(0.7, 0.8, 1.0), 0.006, 0.0, true)
+	_label = Build.text(self, Vector3(0, 2.25, 0), officer_title, 36, Color(0.7, 0.8, 1.0), 0.006, 0.0, true)
 	_speech = Build.text(self, Vector3(0, 2.6, 0), "", 38, Color(1, 1, 0.8), 0.006, 0.0, true)
-	for phi in range(-140, 111, 15):
-		_wp.append(Layout.ring(float(phi), 1.8))
+	_build_route()
 	if multiplayer.is_server():
-		global_position = _wp[0] + Vector3.UP * 0.5
+		if duty:
+			global_position = Layout.local_to_world("police", Vector3(2.0, 0.1, -1.8))
+			global_rotation.y = Layout.face_in_yaw(Layout.SPOTS.police[0]) + PI
+		elif not _wp.is_empty():
+			global_position = _wp[0] + Vector3.UP * 0.5
+	# Синхронизация для участковых, созданных скриптом (не из .tscn).
+	if get_node_or_null("Sync") == null:
+		var sync := MultiplayerSynchronizer.new()
+		sync.name = "Sync"
+		var cfg := SceneReplicationConfig.new()
+		cfg.add_property(NodePath(":position"))
+		cfg.add_property(NodePath(":rotation"))
+		cfg.add_property(NodePath(":state"))
+		cfg.add_property(NodePath(":target_name"))
+		sync.replication_config = cfg
+		add_child(sync)
+
+
+func _apply_profile() -> void:
+	match officer_key:
+		"semenov":
+			officer_title = "Участковый Сергей Палыч"
+			duty = false
+		"nina":
+			officer_title = "Участковый Нина Васильевна"
+			duty = true
+		_:
+			officer_key = "petrovich"
+			officer_title = "Участковый Петрович"
+			duty = false
+
+
+func _style_model() -> void:
+	model.pants = Color(0.12, 0.13, 0.16)
+	model.hat = CharacterModel.Hat.CAP
+	match officer_key:
+		"semenov":
+			model.shirt = Color(0.18, 0.24, 0.36)
+			model.hat_color = Color(0.14, 0.18, 0.28)
+			model.face_name = "player_b"
+			model.height_scale = 1.0
+			model.skin = Color(0.82, 0.64, 0.48)
+		"nina":
+			model.shirt = Color(0.17, 0.2, 0.32)
+			model.hat_color = Color(0.1, 0.12, 0.2)
+			model.face_name = "neutral"
+			model.height_scale = 0.97
+			model.hair_color = Color(0.25, 0.18, 0.12)
+			model.skin = Color(0.9, 0.74, 0.6)
+		_:
+			model.shirt = Color(0.16, 0.2, 0.34)
+			model.hat_color = Color(0.12, 0.15, 0.26)
+			model.face_name = "guard"
+			model.height_scale = 1.05
+
+
+func _build_route() -> void:
+	_wp.clear()
+	var a := -140
+	var b := 110
+	var step := 15
+	match officer_key:
+		"semenov":
+			a = -55
+			b = 35
+			step = 12
+		"nina":
+			return
+	for phi in range(a, b + 1, step):
+		_wp.append(Layout.ring(float(phi), 1.8))
+
+
+func is_watching_cell() -> bool:
+	if not duty or state != S.PATROL:
+		return false
+	return fmod(Time.get_ticks_msec() / 1000.0 + 1.7, 8.0) > 4.2
 
 
 func display_name() -> String:
-	return "Участковый"
+	return officer_title
 
 
 func status_word() -> String:
@@ -136,9 +213,13 @@ func _physics_process(delta: float) -> void:
 			if _bribe_t <= 0.0 or t == null:
 				_jail(_target, 1.0)
 		S.PATROL:
-			if _wp.is_empty():
+			if duty:
+				_duty_look(delta)
+				goal = Vector3.INF
+			elif _wp.is_empty():
 				return
-			goal = _wp[_wp_i]
+			else:
+				goal = _wp[_wp_i]
 			if Vector2(goal.x - global_position.x, goal.z - global_position.z).length() < 1.2:
 				_wp_i += _wp_dir
 				if _wp_i >= _wp.size() or _wp_i < 0:
@@ -196,6 +277,16 @@ func _route_to(target: Vector3) -> Vector3:
 	if absf(d) < 8.0:
 		return target
 	return Layout.ring(a + signf(d) * 9.0, 1.8)
+
+
+func _duty_look(delta: float) -> void:
+	var desk_yaw := Layout.face_in_yaw(Layout.SPOTS.police[0]) + PI
+	var cell_dir: Vector3 = Layout.local_to_world("police", Vector3(-2.3, 0.1, -1.9)) - global_position
+	var cell_yaw := atan2(-cell_dir.x, -cell_dir.z)
+	var target := cell_yaw if is_watching_cell() else desk_yaw
+	global_rotation.y = lerp_angle(global_rotation.y, target, clampf(delta * 3.0, 0.0, 1.0))
+	velocity.x = 0.0
+	velocity.z = 0.0
 
 
 func _player(peer: int) -> Node3D:
@@ -354,7 +445,10 @@ func _animate(delta: float) -> void:
 	var moved := global_position - _prev
 	moved.y = 0.0
 	_prev = global_position
-	model.speed = lerpf(model.speed, moved.length() / maxf(delta, 0.001), minf(delta * 8.0, 1.0))
-	model.pose = "idle"
-	_speech.modulate.a = maxf(_speech.modulate.a - delta * 0.2, 0.0)
-	_label.modulate = Color(1.0, 0.5, 0.4) if state == S.CHASE else Color(0.7, 0.8, 1.0)
+	if model:
+		model.speed = lerpf(model.speed, moved.length() / maxf(delta, 0.001), minf(delta * 8.0, 1.0))
+		model.pose = "sit" if duty and state == S.PATROL else "idle"
+	if _speech:
+		_speech.modulate.a = maxf(_speech.modulate.a - delta * 0.2, 0.0)
+	if _label:
+		_label.modulate = Color(1.0, 0.5, 0.4) if state == S.CHASE else Color(0.7, 0.8, 1.0)

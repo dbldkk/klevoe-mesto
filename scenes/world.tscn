@@ -1490,8 +1490,8 @@ offset = Vector3(7.0, 0, 0.3)
 [node name="Hide2_bush" type="Node3D" parent="."]
 script = ExtResource("s_hiding")
 kind = "bush"
-ring_phi = -130.0
-ring_off = 10.0
+ring_phi = -118.0
+ring_off = 16.0
 
 [node name="Hide3_bush" type="Node3D" parent="."]
 script = ExtResource("s_hiding")
