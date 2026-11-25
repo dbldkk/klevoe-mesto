@@ -67,6 +67,23 @@ func _run() -> void:
 	Inventory._auto_bait()
 	Inventory.changed.disconnect(bait_listener)
 	check(observed_bait.back() == &"worm", "HUD notified after automatic bait switch")
+	# v0.9: rod model, modest signs, camera collision.
+	var bamboo := ItemModels.build("rod", &"bamboo")
+	add_child(bamboo)
+	check(bamboo.find_child("RodTip", true, false) != null, "bamboo rod has a tip marker")
+	check(bamboo.find_child("ReelCrank", true, false) != null, "bamboo rod has a reel crank")
+	var poseidon := ItemModels.build("rod", &"sea")
+	add_child(poseidon)
+	check(poseidon.find_child("RodTip", true, false) != null and poseidon.find_child("ReelCrank", true, false) != null,
+		"Poseidon rod has a tip and a reel")
+	var sign_holder := Node3D.new()
+	add_child(sign_holder)
+	var sign := Build.board_sign(sign_holder, Vector3.ZERO, "ПРОКАТ ЛОДОК · 150 ₽")
+	check(sign != null and float(sign.get_meta("sign_font")) * float(sign.get_meta("sign_px")) <= 0.16,
+		"board sign letter height is modest")
+	bamboo.queue_free()
+	poseidon.queue_free()
+	sign_holder.queue_free()
 	# Save twice, damage primary, recover backup, then save again without destroying it.
 	var save_name := "qa_%d" % OS.get_process_id()
 	check(Saves.create_world(save_name) == "", "create world on disk")
@@ -116,6 +133,11 @@ func _run() -> void:
 	var fishing: FishingController = player.fishing
 	fishing._try_start_charge()
 	check(fishing.state == FishingController.State.CHARGING, "fishing charge starts with starter gear")
+	fishing.charge = 1.0
+	fishing.apply_hand_anim(1.0)
+	check(player.fp_hand.rotation.x > 0.5, "charge animation raises the first-person rod")
+	check(player.spring_arm.margin >= 0.3 and player.spring_arm.collision_mask != 0,
+		"third-person spring arm collides with the world")
 	var bread := Inventory.get_bait_count(&"bread")
 	var worms := Inventory.get_bait_count(&"worm")
 	Inventory.equip_bait(&"worm")

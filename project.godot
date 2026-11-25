@@ -10,8 +10,10 @@ config_version=5
 
 [application]
 
-config/name="Game fish"
-config/version="0.8.3"
+config/name="Клёвое место"
+config/version="0.9.0"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="Game fish"
 run/main_scene="res://scenes/world.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
