@@ -73,6 +73,35 @@ func _run() -> void:
 	check(SpeechBank.zoya().size() >= 5 and SpeechBank.tolya().size() >= 4, "villagers have several dialogue lines")
 	check(InputMap.action_get_events("pee").is_empty() and InputMap.action_get_events("poop").is_empty(),
 		"toilet keys were moved off the keyboard into the radial menu")
+	# v1.1: labels, voice fallback, bouncer, friend skin, forage foods, SFX.
+	var radial_src := load("res://scripts/ui/radial_menu.gd")
+	var titles: Array = []
+	# ACTIONS is a const on the script; instantiate a dummy to read it.
+	var rm := CanvasLayer.new()
+	rm.set_script(radial_src)
+	add_child(rm)
+	for a in rm.ACTIONS:
+		titles.append(String(a.get("title", "")))
+	check("Обоссаться" in titles and "Обосраться" in titles, "radial toilet titles were renamed")
+	rm.queue_free()
+	check(Sfx.voice_stream("zoya", "этой фразы точно нет в озвучке") == null, "missing voice line falls back")
+	check(Sfx.voice_key("Привет") != "" and Sfx.voice_key("Привет") == Sfx.voice_key("«Привет»"),
+		"voice lookup key is stable after punctuation cleanup")
+	check(Sfx.stream_of("splash") != null, "cc0 ogg sound loads")
+	check(Sfx.stream_of("club_music") != null, "club music aliases casino music")
+	check(NeonClub.entry_reason(0, 0.0) == "money", "bouncer rejects a broke visitor")
+	check(NeonClub.entry_reason(1000, 90.0) == "drunk", "bouncer rejects a very drunk visitor")
+	check(NeonClub.entry_reason(1000, 10.0) == "", "bouncer lets a sober paying visitor in")
+	check(GameData.get_food(&"mushroom") != null and GameData.get_food(&"berry") != null, "forage foods exist")
+	var friend := CharacterModel.new()
+	add_child(friend)
+	friend.apply_skin({"outfit": 1, "hat": 5, "shirt": 7, "pants": 1, "skin": 0, "face": 0, "stripes": 0})
+	check(friend.outfit == 1 and friend.hat == CharacterModel.Hat.BANGS, "friend preset applies bangs and outfit")
+	check(friend.find_child("FloralShirt", true, false) != null, "friend preset has an open floral shirt")
+	friend.queue_free()
+	check(ResourceLoader.exists("res://art/textures/memorial_friend.jpg"), "memorial photo texture is in the project")
+	for spot in ["garages", "ruins", "chapel", "dachas", "forest", "campfire", "strip_club"]:
+		check(Layout.SPOTS.has(spot), "layout has %s" % spot)
 	# v0.9: rod model, modest signs, camera collision.
 	var bamboo := ItemModels.build("rod", &"bamboo")
 	add_child(bamboo)
@@ -180,6 +209,17 @@ func _run() -> void:
 		radial.close()
 		check(not Events.ui_open and not radial.visible, "closing the radial menu returns control")
 	check(get_tree().get_nodes_in_group("district_officer").size() >= 3, "three district officers spawned")
+	check(world.get_node_or_null("VillageLife") != null, "village life spawned")
+	check(world.get_node_or_null("StripClub") != null, "strip club spawned")
+	check(world.get_node_or_null("MemorialBoard") != null, "memorial board spawned")
+	check(world.get_node_or_null("VillageBus") != null, "village bus spawned")
+	check(world.get_node_or_null("MemorialBoard/Photo") != null, "memorial board shows a photo")
+	var poi_names: Array = []
+	for n in get_tree().get_nodes_in_group("poi"):
+		if n.has_meta("poi_name"):
+			poi_names.append(String(n.get_meta("poi_name")))
+	for want in ["Гаражный кооператив", "Заброшенный колхоз", "Часовня", "Дачи", "Лесная тропа", "Костёр рыбаков", "Клуб «Неон»", "Доска памяти"]:
+		check(want in poi_names, "map poi present: %s" % want)
 	var in_yard := 0
 	var decor := get_tree().get_first_node_in_group("decor")
 	if decor:
