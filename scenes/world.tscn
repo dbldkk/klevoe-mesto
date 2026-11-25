@@ -1,0 +1,1744 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/world.gd" id="s_world"]
+[ext_resource type="Script" path="res://scripts/world/decor.gd" id="s_decor"]
+[ext_resource type="Script" path="res://scripts/world/terrain.gd" id="s_terrain"]
+[ext_resource type="Script" path="res://scripts/world/water.gd" id="s_water"]
+[ext_resource type="Script" path="res://scripts/world/reeds.gd" id="s_reeds"]
+[ext_resource type="Script" path="res://scripts/world/ladder.gd" id="s_ladder"]
+[ext_resource type="Script" path="res://scripts/world/shop/auto_door.gd" id="s_door"]
+[ext_resource type="Script" path="res://scripts/world/shop/fish_book.gd" id="s_book"]
+[ext_resource type="Script" path="res://scripts/world/shop/shop_item.gd" id="s_shopitem"]
+[ext_resource type="Script" path="res://scripts/world/shop/shop.gd" id="s_shop"]
+[ext_resource type="Script" path="res://scripts/world/shop/cashier.gd" id="s_cashier"]
+[ext_resource type="Script" path="res://scripts/world/shop/guard.gd" id="s_guard"]
+[ext_resource type="Script" path="res://scripts/art/character_model.gd" id="s_model"]
+[ext_resource type="Script" path="res://scripts/world/delegate_interactable.gd" id="s_delegate"]
+[ext_resource type="Script" path="res://scripts/world/market/trader.gd" id="s_trader"]
+[ext_resource type="Script" path="res://scripts/world/bottles.gd" id="s_bottles"]
+[ext_resource type="Script" path="res://scripts/world/mess.gd" id="s_mess"]
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="s_hud"]
+[ext_resource type="Script" path="res://scripts/ui/trader_ui.gd" id="s_traderui"]
+[ext_resource type="Script" path="res://scripts/ui/fish_book_ui.gd" id="s_bookui"]
+[ext_resource type="Script" path="res://scripts/ui/inventory_ui.gd" id="s_invui"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="s_pause"]
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="s_menu"]
+[ext_resource type="Script" path="res://scripts/world/day_cycle.gd" id="s_daycycle"]
+[ext_resource type="Script" path="res://scripts/world/combat.gd" id="s_combat"]
+[ext_resource type="Script" path="res://scripts/world/places/house.gd" id="s_house"]
+[ext_resource type="Script" path="res://scripts/world/places/liquor_store.gd" id="s_liquor"]
+[ext_resource type="Script" path="res://scripts/world/places/casino.gd" id="s_casino"]
+[ext_resource type="Script" path="res://scripts/world/npc/thimble_man.gd" id="s_thimble"]
+[ext_resource type="Script" path="res://scripts/world/places/small_places.gd" id="s_small"]
+[ext_resource type="Script" path="res://scripts/world/places/loader_job.gd" id="s_loader"]
+[ext_resource type="Script" path="res://scripts/world/places/street.gd" id="s_street"]
+[ext_resource type="Script" path="res://scripts/world/places/hiding_spot.gd" id="s_hiding"]
+[ext_resource type="Script" path="res://scripts/world/grass.gd" id="s_grass"]
+[ext_resource type="Script" path="res://scripts/ui/casino_ui.gd" id="s_casinoui"]
+[ext_resource type="Script" path="res://scripts/ui/store_ui.gd" id="s_storeui"]
+[ext_resource type="Script" path="res://scripts/ui/give_ui.gd" id="s_giveui"]
+[ext_resource type="Script" path="res://scripts/ui/map_ui.gd" id="s_mapui"]
+[ext_resource type="Script" path="res://scripts/ui/day_ui.gd" id="s_dayui"]
+[ext_resource type="Script" path="res://scripts/world/weather.gd" id="s_weather"]
+[ext_resource type="Script" path="res://scripts/world/tournament.gd" id="s_tourn"]
+[ext_resource type="Script" path="res://scripts/world/places/moonshine.gd" id="s_moon"]
+[ext_resource type="Script" path="res://scripts/world/vehicle.gd" id="s_vehicle"]
+[ext_resource type="Script" path="res://scripts/world/places/police_station.gd" id="s_police_st"]
+[ext_resource type="Script" path="res://scripts/world/npc/police.gd" id="s_police"]
+[ext_resource type="Script" path="res://scripts/world/npc/babka.gd" id="s_babka"]
+[ext_resource type="Script" path="res://scripts/world/places/house_upgrades.gd" id="s_house_up"]
+[ext_resource type="Script" path="res://scripts/ui/house_ui.gd" id="s_houseui"]
+[ext_resource type="Script" path="res://scripts/ui/settings_ui.gd" id="s_settingsui"]
+[ext_resource type="Script" path="res://scripts/ui/bribe_ui.gd" id="s_bribeui"]
+[ext_resource type="Script" path="res://scripts/ui/dispute_ui.gd" id="s_disputeui"]
+[ext_resource type="Script" path="res://scripts/world/nets.gd" id="s_nets"]
+[ext_resource type="Script" path="res://scripts/world/npc/inspector.gd" id="s_inspector"]
+[ext_resource type="Script" path="res://scripts/world/tsar_sighting.gd" id="s_tsar"]
+[ext_resource type="Script" path="res://scripts/world/places/farm.gd" id="s_farm"]
+[ext_resource type="Script" path="res://scripts/world/npc/cow.gd" id="s_cow"]
+[ext_resource type="Script" path="res://scripts/world/places/club.gd" id="s_club"]
+[ext_resource type="Script" path="res://scripts/world/npc/brawler.gd" id="s_brawler"]
+[ext_resource type="Script" path="res://scripts/world/places/repair_job.gd" id="s_repair"]
+[ext_resource type="Script" path="res://scripts/ui/repair_ui.gd" id="s_repairui"]
+[ext_resource type="Texture2D" path="res://art/textures/plaster.png" id="t_plaster"]
+[ext_resource type="Texture2D" path="res://art/textures/tiles.png" id="t_tiles"]
+[ext_resource type="Texture2D" path="res://art/textures/planks.png" id="t_planks"]
+[ext_resource type="Texture2D" path="res://art/textures/roof.png" id="t_roof"]
+[ext_resource type="Texture2D" path="res://art/textures/sign_shop.png" id="t_sign_shop"]
+[ext_resource type="Texture2D" path="res://art/textures/sign_market.png" id="t_sign_market"]
+[ext_resource type="Texture2D" path="res://art/textures/asphalt.png" id="t_asphalt"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_wall"]
+albedo_texture = ExtResource("t_plaster")
+uv1_triplanar = true
+uv1_world_triplanar = true
+uv1_scale = Vector3(0.4, 0.4, 0.4)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_inner"]
+albedo_texture = ExtResource("t_plaster")
+uv1_triplanar = true
+uv1_world_triplanar = true
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+roughness = 0.9
+albedo_color = Color(1, 0.97, 0.9, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_tile"]
+albedo_texture = ExtResource("t_tiles")
+uv1_triplanar = true
+uv1_world_triplanar = true
+uv1_scale = Vector3(0.45, 0.45, 0.45)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_wood"]
+albedo_texture = ExtResource("t_planks")
+uv1_triplanar = true
+uv1_world_triplanar = true
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_darkwood"]
+albedo_texture = ExtResource("t_planks")
+uv1_triplanar = true
+uv1_world_triplanar = true
+uv1_scale = Vector3(0.6, 0.6, 0.6)
+roughness = 0.9
+albedo_color = Color(0.6, 0.5, 0.45, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_roof"]
+albedo_texture = ExtResource("t_roof")
+uv1_triplanar = true
+uv1_world_triplanar = true
+uv1_scale = Vector3(0.35, 0.35, 0.35)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_stone"]
+albedo_texture = ExtResource("t_asphalt")
+uv1_triplanar = true
+uv1_world_triplanar = true
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_red"]
+albedo_color = Color(0.82, 0.12, 0.12, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_green"]
+albedo_color = Color(0.12, 0.5, 0.22, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_metal"]
+albedo_color = Color(0.6, 0.62, 0.65, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_shelf"]
+albedo_color = Color(0.92, 0.91, 0.88, 1)
+metallic = 0.1
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_glass"]
+albedo_color = Color(0.3, 0.45, 0.55, 0.6)
+transparency = 1
+metallic = 0.4
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_lamp"]
+albedo_color = Color(1, 1, 0.95, 1)
+emission_enabled = true
+emission = Color(1, 0.98, 0.9, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_awning"]
+albedo_color = Color(0.2, 0.45, 0.8, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_awning2"]
+albedo_color = Color(0.95, 0.95, 0.95, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_fish"]
+albedo_color = Color(0.7, 0.75, 0.78, 1)
+metallic = 0.5
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_ice"]
+albedo_color = Color(0.85, 0.93, 1, 1)
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_sign_shop"]
+albedo_texture = ExtResource("t_sign_shop")
+emission_enabled = true
+emission_texture = ExtResource("t_sign_shop")
+emission_energy_multiplier = 0.4
+
+[sub_resource type="QuadMesh" id="Quad_sign_shop"]
+material = SubResource("Mat_sign_shop")
+size = Vector2(6, 1.3)
+
+[sub_resource type="StandardMaterial3D" id="Mat_sign_market"]
+albedo_texture = ExtResource("t_sign_market")
+emission_enabled = true
+emission_texture = ExtResource("t_sign_market")
+emission_energy_multiplier = 0.4
+
+[sub_resource type="QuadMesh" id="Quad_sign_market"]
+material = SubResource("Mat_sign_market")
+size = Vector2(3, 0.65)
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.28, 0.48, 0.8, 1)
+sky_horizon_color = Color(0.68, 0.78, 0.88, 1)
+ground_bottom_color = Color(0.2, 0.25, 0.2, 1)
+ground_horizon_color = Color(0.68, 0.78, 0.88, 1)
+sun_angle_max = 20.0
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_energy = 1.0
+tonemap_mode = 3
+tonemap_white = 6.0
+ssao_enabled = true
+ssao_radius = 1.2
+ssao_intensity = 1.6
+ssil_enabled = true
+ssil_intensity = 0.8
+glow_enabled = true
+glow_intensity = 0.4
+glow_strength = 0.9
+glow_bloom = 0.0
+glow_blend_mode = 1
+glow_hdr_threshold = 1.2
+fog_enabled = true
+fog_light_color = Color(0.72, 0.8, 0.88, 1)
+fog_density = 0.0015
+fog_sky_affect = 0.3
+adjustment_enabled = true
+adjustment_saturation = 1.14
+adjustment_contrast = 1.06
+
+[sub_resource type="CapsuleShape3D" id="NpcShape"]
+radius = 0.4
+height = 1.9
+
+[sub_resource type="CapsuleShape3D" id="TalkShape"]
+radius = 0.55
+height = 2.0
+
+[sub_resource type="BoxShape3D" id="LadderShape"]
+size = Vector3(1.2, 1.6, 1.0)
+
+[sub_resource type="BoxShape3D" id="BookShape"]
+size = Vector3(0.8, 1.4, 0.8)
+
+[sub_resource type="SceneReplicationConfig" id="GuardRepl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:state")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:talker")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:hp")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="TraderRepl"]
+properties/0/path = NodePath(".:drunk")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:mood")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:asleep_time")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:angry_time")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:strikes")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:drink_anim")
+properties/5/spawn = true
+properties/5/replication_mode = 1
+properties/6/path = NodePath(".:drink_id")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:hurt_time")
+properties/7/spawn = true
+properties/7/replication_mode = 1
+
+[sub_resource type="SceneReplicationConfig" id="DayRepl"]
+properties/0/path = NodePath(".:minutes")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:day")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:phase")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="GoshaRepl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:state")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:hp")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="WeatherRepl"]
+properties/0/path = NodePath(".:state")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:next_state")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="TournRepl"]
+properties/0/path = NodePath(".:active")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:leader_name")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:leader_fish")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:leader_kg")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:prize")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="HouseRepl"]
+properties/0/path = NodePath(".:upgrades")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="PoliceRepl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:state")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:target_name")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="CowRepl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:state")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:graze_left")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:herder_name")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="ClubRepl"]
+properties/0/path = NodePath(".:kind")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:stage")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="BrawlRepl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:active")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:down")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="InspRepl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:state")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:siren")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="MoonRepl"]
+properties/0/path = NodePath(".:stage")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:left")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+
+[sub_resource type="SceneReplicationConfig" id="VehRepl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:speed")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:occupants")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:rented_day")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:capsized")
+properties/5/spawn = true
+properties/5/replication_mode = 2
+properties/6/path = NodePath(".:steer_vis")
+properties/6/spawn = true
+properties/6/replication_mode = 1
+
+[node name="World" type="Node3D"]
+script = ExtResource("s_world")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.85, 0.75, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.25
+shadow_enabled = true
+directional_shadow_max_distance = 70.0
+
+[node name="Moon" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.9, -2.2, 0)
+light_color = Color(0.62, 0.72, 1, 1)
+light_energy = 0.0
+shadow_enabled = true
+directional_shadow_max_distance = 50.0
+visible = false
+
+[node name="DayCycle" type="Node" parent="."]
+script = ExtResource("s_daycycle")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="DayCycle"]
+root_path = NodePath("..")
+replication_config = SubResource("DayRepl")
+
+[node name="Combat" type="Node" parent="."]
+script = ExtResource("s_combat")
+
+[node name="Weather" type="Node" parent="."]
+script = ExtResource("s_weather")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Weather"]
+replication_config = SubResource("WeatherRepl")
+
+[node name="Tournament" type="Node" parent="."]
+script = ExtResource("s_tourn")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Tournament"]
+replication_config = SubResource("TournRepl")
+
+[node name="MenuCamera" type="Camera3D" parent="."]
+position = Vector3(-2, 11, -40)
+rotation = Vector3(-0.28, 3.14159, 0)
+current = true
+
+[node name="Terrain" type="StaticBody3D" parent="."]
+script = ExtResource("s_terrain")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+script = ExtResource("s_water")
+
+[node name="Reeds" type="Node3D" parent="."]
+script = ExtResource("s_reeds")
+
+[node name="Pier" type="Node3D" parent="." groups=["poi"]]
+position = Vector3(0, 0, -9.6)
+metadata/poi_name = "Пирс"
+
+[node name="Deck" type="CSGBox3D" parent="Pier"]
+position = Vector3(0, 0.08, 0)
+size = Vector3(2.6, 0.16, 9)
+material = SubResource("Mat_wood")
+use_collision = true
+collision_mask = 0
+
+[node name="Post0_0" type="CSGBox3D" parent="Pier"]
+position = Vector3(-1.15, -1.6, -4.3)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Post0_1" type="CSGBox3D" parent="Pier"]
+position = Vector3(1.15, -1.6, -4.3)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Post1_0" type="CSGBox3D" parent="Pier"]
+position = Vector3(-1.15, -1.6, -2)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Post1_1" type="CSGBox3D" parent="Pier"]
+position = Vector3(1.15, -1.6, -2)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Post2_0" type="CSGBox3D" parent="Pier"]
+position = Vector3(-1.15, -1.6, 0.5)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Post2_1" type="CSGBox3D" parent="Pier"]
+position = Vector3(1.15, -1.6, 0.5)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Post3_0" type="CSGBox3D" parent="Pier"]
+position = Vector3(-1.15, -1.6, 3)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Post3_1" type="CSGBox3D" parent="Pier"]
+position = Vector3(1.15, -1.6, 3)
+size = Vector3(0.2, 3.6, 0.2)
+material = SubResource("Mat_darkwood")
+
+[node name="Rail0" type="CSGBox3D" parent="Pier"]
+position = Vector3(-1.25, 0.6, 0.5)
+size = Vector3(0.08, 0.08, 8)
+material = SubResource("Mat_darkwood")
+
+[node name="Rail1" type="CSGBox3D" parent="Pier"]
+position = Vector3(1.25, 0.6, 0.5)
+size = Vector3(0.08, 0.08, 8)
+material = SubResource("Mat_darkwood")
+
+[node name="Bench" type="CSGBox3D" parent="Pier"]
+position = Vector3(0, 0.4, -3.6)
+size = Vector3(1.6, 0.08, 0.4)
+material = SubResource("Mat_wood")
+use_collision = true
+collision_mask = 0
+
+[node name="Ladder" type="Node3D" parent="Pier"]
+position = Vector3(0.6, -0.4, -4.75)
+script = ExtResource("s_ladder")
+top_point = Vector3(0, 0.75, 0.9)
+
+[node name="Step0" type="CSGBox3D" parent="Pier/Ladder"]
+position = Vector3(0, -0.6, 0)
+size = Vector3(0.5, 0.04, 0.06)
+material = SubResource("Mat_metal")
+
+[node name="Step1" type="CSGBox3D" parent="Pier/Ladder"]
+position = Vector3(0, -0.3, 0)
+size = Vector3(0.5, 0.04, 0.06)
+material = SubResource("Mat_metal")
+
+[node name="Step2" type="CSGBox3D" parent="Pier/Ladder"]
+position = Vector3(0, 0.0, 0)
+size = Vector3(0.5, 0.04, 0.06)
+material = SubResource("Mat_metal")
+
+[node name="Step3" type="CSGBox3D" parent="Pier/Ladder"]
+position = Vector3(0, 0.29999999999999993, 0)
+size = Vector3(0.5, 0.04, 0.06)
+material = SubResource("Mat_metal")
+
+[node name="Side0" type="CSGBox3D" parent="Pier/Ladder"]
+position = Vector3(-0.25, -0.1, 0)
+size = Vector3(0.04, 1.4, 0.04)
+material = SubResource("Mat_metal")
+
+[node name="Side1" type="CSGBox3D" parent="Pier/Ladder"]
+position = Vector3(0.25, -0.1, 0)
+size = Vector3(0.04, 1.4, 0.04)
+material = SubResource("Mat_metal")
+
+[node name="TalkArea" type="Area3D" parent="Pier/Ladder"]
+script = ExtResource("s_delegate")
+
+[node name="Shape" type="CollisionShape3D" parent="Pier/Ladder/TalkArea"]
+position = Vector3(0, 0.0, 0)
+shape = SubResource("LadderShape")
+
+[node name="RentSign" type="Label3D" parent="Pier"]
+position = Vector3(1.4, 1.4, -1.0)
+rotation = Vector3(0, -1.5708, 0)
+text = "ПРОКАТ ЛОДОК · 150 ₽"
+font_size = 48
+pixel_size = 0.006
+modulate = Color(1, 0.9, 0.4, 1)
+outline_size = 16
+outline_modulate = Color(0, 0, 0, 0.7)
+
+[node name="Shop" type="Node3D" parent="."]
+position = Vector3(13, 0, -4)
+script = ExtResource("s_shop")
+
+[node name="Building" type="CSGCombiner3D" parent="Shop"]
+use_collision = true
+collision_mask = 0
+
+[node name="Outer" type="CSGBox3D" parent="Shop/Building"]
+position = Vector3(0, 2.1, 0)
+size = Vector3(16, 4.2, 11)
+material = SubResource("Mat_wall")
+
+[node name="Inner" type="CSGBox3D" parent="Shop/Building"]
+position = Vector3(0, 1.9, 0)
+size = Vector3(15.6, 4.0, 10.6)
+material = SubResource("Mat_inner")
+operation = 2
+
+[node name="Door" type="CSGBox3D" parent="Shop/Building"]
+position = Vector3(0, 1.2, 5.5)
+size = Vector3(2.0, 2.4, 1.0)
+material = SubResource("Mat_inner")
+operation = 2
+
+[node name="Base" type="CSGBox3D" parent="Shop"]
+position = Vector3(0, 0.25, 5.52)
+size = Vector3(16.1, 0.5, 0.06)
+material = SubResource("Mat_stone")
+
+[node name="Roof" type="CSGBox3D" parent="Shop"]
+position = Vector3(0, 4.3, 0)
+size = Vector3(16.6, 0.25, 11.6)
+material = SubResource("Mat_roof")
+
+[node name="Floor" type="CSGBox3D" parent="Shop"]
+position = Vector3(0, 0.02, 0)
+size = Vector3(15.6, 0.04, 10.6)
+material = SubResource("Mat_tile")
+
+[node name="Stripe" type="CSGBox3D" parent="Shop"]
+position = Vector3(0, 3.55, 5.53)
+size = Vector3(16, 0.12, 0.08)
+material = SubResource("Mat_green")
+
+[node name="SignQuad" type="MeshInstance3D" parent="Shop"]
+position = Vector3(0, 3.05, 5.56)
+mesh = SubResource("Quad_sign_shop")
+
+[node name="WindowL" type="CSGBox3D" parent="Shop"]
+position = Vector3(-4.8, 1.5, 5.52)
+size = Vector3(4.2, 1.6, 0.08)
+material = SubResource("Mat_glass")
+
+[node name="WindowR" type="CSGBox3D" parent="Shop"]
+position = Vector3(4.8, 1.5, 5.52)
+size = Vector3(4.2, 1.6, 0.08)
+material = SubResource("Mat_glass")
+
+[node name="DoorFrame" type="CSGBox3D" parent="Shop"]
+position = Vector3(0, 2.47, 5.53)
+size = Vector3(2.2, 0.1, 0.1)
+material = SubResource("Mat_metal")
+
+[node name="Doors" type="Node3D" parent="Shop"]
+position = Vector3(0, 0, 5.5)
+script = ExtResource("s_door")
+
+[node name="Lamp0" type="CSGBox3D" parent="Shop"]
+position = Vector3(-4, 3.85, -1.5)
+size = Vector3(1.6, 0.06, 0.3)
+material = SubResource("Mat_lamp")
+
+[node name="Lamp1" type="CSGBox3D" parent="Shop"]
+position = Vector3(4, 3.85, -1.5)
+size = Vector3(1.6, 0.06, 0.3)
+material = SubResource("Mat_lamp")
+
+[node name="Lamp2" type="CSGBox3D" parent="Shop"]
+position = Vector3(-4, 3.85, 2.5)
+size = Vector3(1.6, 0.06, 0.3)
+material = SubResource("Mat_lamp")
+
+[node name="Lamp3" type="CSGBox3D" parent="Shop"]
+position = Vector3(4, 3.85, 2.5)
+size = Vector3(1.6, 0.06, 0.3)
+material = SubResource("Mat_lamp")
+
+[node name="Light1" type="OmniLight3D" parent="Shop"]
+position = Vector3(-3.5, 3.4, 0)
+light_energy = 1.3
+omni_range = 9.0
+
+[node name="Light2" type="OmniLight3D" parent="Shop"]
+position = Vector3(3.5, 3.4, 0)
+light_energy = 1.3
+omni_range = 9.0
+
+[node name="ShelfA" type="CSGBox3D" parent="Shop"]
+position = Vector3(-3.6, 1.1, -4.95)
+size = Vector3(6.4, 2.2, 0.08)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfA_0" type="CSGBox3D" parent="Shop"]
+position = Vector3(-3.6, 0.1, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="ShelfA_1" type="CSGBox3D" parent="Shop"]
+position = Vector3(-3.6, 0.7, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfA_2" type="CSGBox3D" parent="Shop"]
+position = Vector3(-3.6, 1.3, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfA_3" type="CSGBox3D" parent="Shop"]
+position = Vector3(-3.6, 1.9, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfA_side0" type="CSGBox3D" parent="Shop"]
+position = Vector3(-6.800000000000001, 1.1, -4.7)
+size = Vector3(0.05, 2.2, 0.55)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="ShelfA_side1" type="CSGBox3D" parent="Shop"]
+position = Vector3(-0.3999999999999999, 1.1, -4.7)
+size = Vector3(0.05, 2.2, 0.55)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="ShelfB" type="CSGBox3D" parent="Shop"]
+position = Vector3(3.6, 1.1, -4.95)
+size = Vector3(6.4, 2.2, 0.08)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfB_0" type="CSGBox3D" parent="Shop"]
+position = Vector3(3.6, 0.1, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="ShelfB_1" type="CSGBox3D" parent="Shop"]
+position = Vector3(3.6, 0.7, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfB_2" type="CSGBox3D" parent="Shop"]
+position = Vector3(3.6, 1.3, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfB_3" type="CSGBox3D" parent="Shop"]
+position = Vector3(3.6, 1.9, -4.7)
+size = Vector3(6.4, 0.04, 0.55)
+material = SubResource("Mat_shelf")
+
+[node name="ShelfB_side0" type="CSGBox3D" parent="Shop"]
+position = Vector3(0.3999999999999999, 1.1, -4.7)
+size = Vector3(0.05, 2.2, 0.55)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="ShelfB_side1" type="CSGBox3D" parent="Shop"]
+position = Vector3(6.800000000000001, 1.1, -4.7)
+size = Vector3(0.05, 2.2, 0.55)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="SignDrinks" type="Label3D" parent="Shop"]
+position = Vector3(0, 2.65, -4.9)
+text = "АЛКОГОЛЬ"
+font_size = 70
+pixel_size = 0.006
+modulate = Color(1, 0.85, 0.5, 1)
+outline_size = 16
+outline_modulate = Color(0, 0, 0, 0.7)
+
+[node name="LeftShelf" type="CSGBox3D" parent="Shop"]
+position = Vector3(-7.5, 1.1, -1.0)
+size = Vector3(0.08, 2.2, 7)
+material = SubResource("Mat_shelf")
+
+[node name="LeftShelf_0" type="CSGBox3D" parent="Shop"]
+position = Vector3(-7.25, 0.1, -1.0)
+size = Vector3(0.55, 0.04, 7)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="LeftShelf_1" type="CSGBox3D" parent="Shop"]
+position = Vector3(-7.25, 0.7, -1.0)
+size = Vector3(0.55, 0.04, 7)
+material = SubResource("Mat_shelf")
+
+[node name="LeftShelf_2" type="CSGBox3D" parent="Shop"]
+position = Vector3(-7.25, 1.3, -1.0)
+size = Vector3(0.55, 0.04, 7)
+material = SubResource("Mat_shelf")
+
+[node name="LeftShelf_3" type="CSGBox3D" parent="Shop"]
+position = Vector3(-7.25, 1.9, -1.0)
+size = Vector3(0.55, 0.04, 7)
+material = SubResource("Mat_shelf")
+
+[node name="SignFood" type="Label3D" parent="Shop"]
+position = Vector3(-7.4, 2.65, -1.0)
+rotation = Vector3(0, 1.5708, 0)
+text = "НАЖИВКА · ПРОДУКТЫ"
+font_size = 60
+pixel_size = 0.005
+modulate = Color(0.8, 1, 0.7, 1)
+outline_size = 16
+outline_modulate = Color(0, 0, 0, 0.7)
+
+[node name="Island" type="CSGBox3D" parent="Shop"]
+position = Vector3(0, 0.5, -0.5)
+size = Vector3(4.5, 1.0, 1.2)
+material = SubResource("Mat_shelf")
+use_collision = true
+collision_mask = 0
+
+[node name="SignSale" type="Label3D" parent="Shop"]
+position = Vector3(0, 2.35, -0.5)
+text = "АКЦИЯ!"
+font_size = 60
+pixel_size = 0.006
+modulate = Color(1, 0.3, 0.2, 1)
+outline_size = 16
+outline_modulate = Color(0, 0, 0, 0.7)
+billboard = 1
+
+[node name="RodRack" type="CSGBox3D" parent="Shop"]
+position = Vector3(7.7, 1.3, -2.15)
+size = Vector3(0.08, 2.6, 4.9)
+material = SubResource("Mat_wood")
+
+[node name="SignRods" type="Label3D" parent="Shop"]
+position = Vector3(7.6, 2.95, -2.3)
+rotation = Vector3(0, -1.5708, 0)
+text = "РЫБАЛКА · ОХОТА"
+font_size = 56
+pixel_size = 0.005
+modulate = Color(0.7, 0.85, 1, 1)
+outline_size = 16
+outline_modulate = Color(0, 0, 0, 0.7)
+
+[node name="Counter" type="CSGBox3D" parent="Shop"]
+position = Vector3(5.9, 0.5, 3.2)
+size = Vector3(0.8, 1.0, 2.8)
+material = SubResource("Mat_red")
+use_collision = true
+collision_mask = 0
+
+[node name="CounterTop" type="CSGBox3D" parent="Shop"]
+position = Vector3(5.9, 1.02, 3.2)
+size = Vector3(0.9, 0.05, 2.9)
+material = SubResource("Mat_shelf")
+
+[node name="Register" type="CSGBox3D" parent="Shop"]
+position = Vector3(6.0, 1.2, 3.3)
+size = Vector3(0.4, 0.3, 0.5)
+material = SubResource("Mat_metal")
+
+[node name="CashBack" type="CSGBox3D" parent="Shop"]
+position = Vector3(7.75, 1.5, 3.2)
+size = Vector3(0.06, 1.4, 2.6)
+material = SubResource("Mat_red")
+
+[node name="SignCash" type="Label3D" parent="Shop"]
+position = Vector3(7.7, 2.95, 3.2)
+rotation = Vector3(0, -1.5708, 0)
+text = "КАССА"
+font_size = 64
+pixel_size = 0.006
+modulate = Color(1, 1, 1, 1)
+outline_size = 16
+outline_modulate = Color(0, 0, 0, 0.7)
+
+[node name="Item0_beer" type="Area3D" parent="Shop"]
+position = Vector3(-5.15, 0.72, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"beer"
+facings = 8
+spacing = 0.17
+
+[node name="Item1_beer" type="Area3D" parent="Shop"]
+position = Vector3(-2.05, 0.72, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"beer"
+facings = 8
+spacing = 0.17
+
+[node name="Item2_strong_beer" type="Area3D" parent="Shop"]
+position = Vector3(-5.15, 1.32, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"strong_beer"
+facings = 8
+spacing = 0.17
+
+[node name="Item3_strong_beer" type="Area3D" parent="Shop"]
+position = Vector3(-2.05, 1.32, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"strong_beer"
+facings = 8
+spacing = 0.17
+
+[node name="Item4_cider" type="Area3D" parent="Shop"]
+position = Vector3(-5.15, 1.92, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"cider"
+facings = 8
+spacing = 0.17
+
+[node name="Item5_cider" type="Area3D" parent="Shop"]
+position = Vector3(-2.05, 1.92, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"cider"
+facings = 8
+spacing = 0.17
+
+[node name="Item6_beer" type="Area3D" parent="Shop"]
+position = Vector3(-3.6, 0.12, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"beer"
+facings = 10
+spacing = 0.17
+
+[node name="Item7_port" type="Area3D" parent="Shop"]
+position = Vector3(2.05, 0.72, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"port"
+facings = 8
+spacing = 0.17
+
+[node name="Item8_port" type="Area3D" parent="Shop"]
+position = Vector3(5.15, 0.72, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"port"
+facings = 8
+spacing = 0.17
+
+[node name="Item9_wine" type="Area3D" parent="Shop"]
+position = Vector3(2.05, 1.32, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"wine"
+facings = 8
+spacing = 0.17
+
+[node name="Item10_wine" type="Area3D" parent="Shop"]
+position = Vector3(5.15, 1.32, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"wine"
+facings = 8
+spacing = 0.17
+
+[node name="Item11_vodka" type="Area3D" parent="Shop"]
+position = Vector3(2.05, 1.92, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"vodka"
+facings = 8
+spacing = 0.17
+
+[node name="Item12_vodka" type="Area3D" parent="Shop"]
+position = Vector3(5.15, 1.92, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"vodka"
+facings = 8
+spacing = 0.17
+
+[node name="Item13_vodka" type="Area3D" parent="Shop"]
+position = Vector3(3.6, 0.12, -4.7)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"vodka"
+facings = 10
+spacing = 0.17
+
+[node name="Item14_bread" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 0.72, -3.2)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "bait"
+item_id = &"bread"
+facings = 5
+spacing = 0.15
+
+[node name="Item15_corn" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 0.72, -1.0)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "bait"
+item_id = &"corn"
+facings = 5
+spacing = 0.15
+
+[node name="Item16_worm" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 0.72, 1.2000000000000002)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "bait"
+item_id = &"worm"
+facings = 5
+spacing = 0.15
+
+[node name="Item17_maggot" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 1.32, -3.2)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "bait"
+item_id = &"maggot"
+facings = 5
+spacing = 0.15
+
+[node name="Item18_dough" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 1.32, -1.0)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "bait"
+item_id = &"dough"
+facings = 5
+spacing = 0.15
+
+[node name="Item19_sausage" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 1.32, 1.2000000000000002)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "bait"
+item_id = &"sausage"
+facings = 5
+spacing = 0.15
+
+[node name="Item20_noodles" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 1.92, -3.2)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "food"
+item_id = &"noodles"
+facings = 5
+spacing = 0.15
+
+[node name="Item21_crackers" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 1.92, -1.0)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "food"
+item_id = &"crackers"
+facings = 5
+spacing = 0.15
+
+[node name="Item22_cheburek" type="Area3D" parent="Shop"]
+position = Vector3(-7.25, 1.92, 1.2000000000000002)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "food"
+item_id = &"cheburek"
+facings = 5
+spacing = 0.15
+
+[node name="Item23_crackers" type="Area3D" parent="Shop"]
+position = Vector3(-1.2, 1.0, -0.5)
+script = ExtResource("s_shopitem")
+kind = "food"
+item_id = &"crackers"
+facings = 7
+spacing = 0.16
+
+[node name="Item24_noodles" type="Area3D" parent="Shop"]
+position = Vector3(1.2, 1.0, -0.5)
+script = ExtResource("s_shopitem")
+kind = "food"
+item_id = &"noodles"
+facings = 7
+spacing = 0.14
+
+[node name="Item25_flashlight" type="Area3D" parent="Shop"]
+position = Vector3(0, 1.0, -0.45)
+script = ExtResource("s_shopitem")
+kind = "tool"
+item_id = &"flashlight"
+facings = 3
+spacing = 0.12
+
+[node name="Item26_sugar" type="Area3D" parent="Shop"]
+position = Vector3(-1.1, 1.0, -0.85)
+rotation = Vector3(0, 3.14159, 0)
+script = ExtResource("s_shopitem")
+kind = "misc"
+item_id = &"sugar"
+facings = 5
+spacing = 0.15
+
+[node name="Item27_yeast" type="Area3D" parent="Shop"]
+position = Vector3(1.0, 1.0, -0.85)
+rotation = Vector3(0, 3.14159, 0)
+script = ExtResource("s_shopitem")
+kind = "misc"
+item_id = &"yeast"
+facings = 6
+spacing = 0.11
+
+[node name="Item28_bamboo" type="Area3D" parent="Shop"]
+position = Vector3(7.4, 0, -4.35)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "rod"
+item_id = &"bamboo"
+facings = 2
+spacing = 0.18
+
+[node name="Item29_telescopic" type="Area3D" parent="Shop"]
+position = Vector3(7.4, 0, -3.63)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "rod"
+item_id = &"telescopic"
+facings = 2
+spacing = 0.18
+
+[node name="Item30_spinning" type="Area3D" parent="Shop"]
+position = Vector3(7.4, 0, -2.9099999999999997)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "rod"
+item_id = &"spinning"
+facings = 2
+spacing = 0.18
+
+[node name="Item31_carbon" type="Area3D" parent="Shop"]
+position = Vector3(7.4, 0, -2.1899999999999995)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "rod"
+item_id = &"carbon"
+facings = 2
+spacing = 0.18
+
+[node name="Item32_feeder" type="Area3D" parent="Shop"]
+position = Vector3(7.4, 0, -1.4699999999999998)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "rod"
+item_id = &"feeder"
+facings = 2
+spacing = 0.18
+
+[node name="Item33_sea" type="Area3D" parent="Shop"]
+position = Vector3(7.4, 0, -0.75)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "rod"
+item_id = &"sea"
+facings = 1
+spacing = 0.18
+
+[node name="Item34_bat" type="Area3D" parent="Shop"]
+position = Vector3(7.4, 0.05, 0.0)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "weapon"
+item_id = &"bat"
+facings = 2
+spacing = 0.2
+
+[node name="Item35_cognac" type="Area3D" parent="Shop"]
+position = Vector3(5.75, 1.05, 2.25)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "drink"
+item_id = &"cognac"
+facings = 3
+spacing = 0.14
+
+[node name="Item36_cigs" type="Area3D" parent="Shop"]
+position = Vector3(5.75, 1.05, 4.25)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "smoke"
+item_id = &"cigs"
+facings = 4
+spacing = 0.08
+
+[node name="Item37_shawarma" type="Area3D" parent="Shop"]
+position = Vector3(5.75, 1.05, 3.8)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_shopitem")
+kind = "food"
+item_id = &"shawarma"
+facings = 1
+spacing = 0.15
+
+[node name="Cashier" type="Node3D" parent="Shop"]
+position = Vector3(7.05, 0, 3.2)
+rotation = Vector3(0, 1.5708, 0)
+script = ExtResource("s_cashier")
+
+[node name="Visual" type="Node3D" parent="Shop/Cashier"]
+script = ExtResource("s_model")
+shirt = Color(0.75, 0.15, 0.2, 1)
+pants = Color(0.2, 0.2, 0.25, 1)
+hat = 0
+hair_color = Color(0.55, 0.2, 0.1, 1)
+face_name = "cashier"
+height_scale = 0.95
+
+[node name="TalkArea" type="Area3D" parent="Shop/Cashier"]
+script = ExtResource("s_delegate")
+
+[node name="Shape" type="CollisionShape3D" parent="Shop/Cashier/TalkArea"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("TalkShape")
+
+[node name="Name" type="Label3D" parent="Shop/Cashier"]
+position = Vector3(0, 2.1, 0)
+text = "Зина"
+font_size = 40
+pixel_size = 0.01
+modulate = Color(1, 1, 1, 0.8)
+outline_size = 16
+outline_modulate = Color(0, 0, 0, 0.7)
+billboard = 1
+
+[node name="Book" type="Node3D" parent="Shop"]
+position = Vector3(-6.2, 0, 3.8)
+script = ExtResource("s_book")
+
+[node name="TalkArea" type="Area3D" parent="Shop/Book"]
+script = ExtResource("s_delegate")
+
+[node name="Shape" type="CollisionShape3D" parent="Shop/Book/TalkArea"]
+position = Vector3(0, 0.7, 0)
+shape = SubResource("BookShape")
+
+[node name="Guard" type="CharacterBody3D" parent="Shop"]
+position = Vector3(-3.6, 0.05, 4.3)
+collision_layer = 8
+collision_mask = 5
+script = ExtResource("s_guard")
+
+[node name="Shape" type="CollisionShape3D" parent="Shop/Guard"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("NpcShape")
+
+[node name="Visual" type="Node3D" parent="Shop/Guard"]
+script = ExtResource("s_model")
+shirt = Color(0.12, 0.14, 0.2, 1)
+pants = Color(0.1, 0.1, 0.12, 1)
+hat = 1
+hat_color = Color(0.08, 0.08, 0.1, 1)
+face_name = "guard"
+fat = true
+height_scale = 1.07
+
+[node name="TalkArea" type="Area3D" parent="Shop/Guard"]
+script = ExtResource("s_delegate")
+
+[node name="Shape" type="CollisionShape3D" parent="Shop/Guard/TalkArea"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("TalkShape")
+
+[node name="Status" type="Label3D" parent="Shop/Guard"]
+position = Vector3(0, 2.4, 0)
+billboard = 1
+no_depth_test = true
+font_size = 34
+pixel_size = 0.006
+outline_size = 10
+text = ""
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Shop/Guard"]
+replication_config = SubResource("GuardRepl")
+
+[node name="Market" type="Node3D" parent="." groups=["poi"]]
+position = Vector3(-13, 0, 5.4)
+metadata/poi_name = "Рынок · Дядя Толя"
+
+[node name="Table" type="CSGBox3D" parent="Market"]
+position = Vector3(0, 0.45, 0)
+size = Vector3(3, 0.9, 1.2)
+material = SubResource("Mat_wood")
+use_collision = true
+collision_mask = 0
+
+[node name="Ice" type="CSGBox3D" parent="Market"]
+position = Vector3(0, 0.92, 0.05)
+size = Vector3(2.8, 0.06, 1.0)
+material = SubResource("Mat_ice")
+
+[node name="Post0" type="CSGBox3D" parent="Market"]
+position = Vector3(-1.5, 1.3, -0.6)
+size = Vector3(0.12, 2.6, 0.12)
+material = SubResource("Mat_darkwood")
+
+[node name="Post1" type="CSGBox3D" parent="Market"]
+position = Vector3(1.5, 1.3, -0.6)
+size = Vector3(0.12, 2.6, 0.12)
+material = SubResource("Mat_darkwood")
+
+[node name="Post2" type="CSGBox3D" parent="Market"]
+position = Vector3(-1.5, 1.3, 0.8)
+size = Vector3(0.12, 2.6, 0.12)
+material = SubResource("Mat_darkwood")
+
+[node name="Post3" type="CSGBox3D" parent="Market"]
+position = Vector3(1.5, 1.3, 0.8)
+size = Vector3(0.12, 2.6, 0.12)
+material = SubResource("Mat_darkwood")
+
+[node name="Awning0" type="CSGBox3D" parent="Market"]
+position = Vector3(-1.42, 2.62, 0.1)
+size = Vector3(0.57, 0.08, 1.95)
+material = SubResource("Mat_awning")
+
+[node name="Awning1" type="CSGBox3D" parent="Market"]
+position = Vector3(-0.85, 2.62, 0.1)
+size = Vector3(0.57, 0.08, 1.95)
+material = SubResource("Mat_awning2")
+
+[node name="Awning2" type="CSGBox3D" parent="Market"]
+position = Vector3(-0.28, 2.62, 0.1)
+size = Vector3(0.57, 0.08, 1.95)
+material = SubResource("Mat_awning")
+
+[node name="Awning3" type="CSGBox3D" parent="Market"]
+position = Vector3(0.29000000000000004, 2.62, 0.1)
+size = Vector3(0.57, 0.08, 1.95)
+material = SubResource("Mat_awning2")
+
+[node name="Awning4" type="CSGBox3D" parent="Market"]
+position = Vector3(0.8599999999999999, 2.62, 0.1)
+size = Vector3(0.57, 0.08, 1.95)
+material = SubResource("Mat_awning")
+
+[node name="Awning5" type="CSGBox3D" parent="Market"]
+position = Vector3(1.4299999999999997, 2.62, 0.1)
+size = Vector3(0.57, 0.08, 1.95)
+material = SubResource("Mat_awning2")
+
+[node name="Fish0" type="CSGBox3D" parent="Market"]
+position = Vector3(-0.9, 0.99, 0.1)
+size = Vector3(0.42, 0.07, 0.15)
+material = SubResource("Mat_fish")
+
+[node name="Fish1" type="CSGBox3D" parent="Market"]
+position = Vector3(-0.3, 0.99, 0.1)
+size = Vector3(0.42, 0.07, 0.15)
+material = SubResource("Mat_fish")
+
+[node name="Fish2" type="CSGBox3D" parent="Market"]
+position = Vector3(0.4, 0.99, 0.1)
+size = Vector3(0.42, 0.07, 0.15)
+material = SubResource("Mat_fish")
+
+[node name="Fish3" type="CSGBox3D" parent="Market"]
+position = Vector3(0.95, 0.99, 0.1)
+size = Vector3(0.42, 0.07, 0.15)
+material = SubResource("Mat_fish")
+
+[node name="SignQuad" type="MeshInstance3D" parent="Market"]
+position = Vector3(0, 2.25, 1.08)
+mesh = SubResource("Quad_sign_market")
+
+[node name="Crate1" type="CSGBox3D" parent="Market"]
+position = Vector3(1.9, 0.25, -0.6)
+size = Vector3(0.6, 0.5, 0.6)
+material = SubResource("Mat_wood")
+use_collision = true
+collision_mask = 0
+
+[node name="Crate2" type="CSGBox3D" parent="Market"]
+position = Vector3(1.9, 0.75, -0.6)
+size = Vector3(0.5, 0.5, 0.5)
+material = SubResource("Mat_wood")
+
+[node name="Trader" type="Node3D" parent="Market"]
+position = Vector3(0, 0, -1.2)
+rotation = Vector3(0, 3.14159, 0)
+script = ExtResource("s_trader")
+
+[node name="Visual" type="Node3D" parent="Market/Trader"]
+script = ExtResource("s_model")
+shirt = Color(0.2, 0.25, 0.55, 1)
+pants = Color(0.25, 0.22, 0.18, 1)
+hat = 3
+hat_color = Color(0.35, 0.28, 0.2, 1)
+face_name = "trader"
+fat = true
+stripes = true
+
+[node name="Body" type="StaticBody3D" parent="Market/Trader"]
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Market/Trader/Body"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("NpcShape")
+
+[node name="TalkArea" type="Area3D" parent="Market/Trader"]
+script = ExtResource("s_delegate")
+
+[node name="Shape" type="CollisionShape3D" parent="Market/Trader/TalkArea"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("TalkShape")
+
+[node name="Status" type="Label3D" parent="Market/Trader"]
+position = Vector3(0, 3.05, 0)
+billboard = 1
+no_depth_test = true
+font_size = 34
+pixel_size = 0.006
+outline_size = 10
+text = ""
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Market/Trader"]
+replication_config = SubResource("TraderRepl")
+
+[node name="Street" type="Node3D" parent="."]
+script = ExtResource("s_street")
+
+[node name="House" type="Node3D" parent="."]
+script = ExtResource("s_house")
+
+[node name="LiquorStore" type="Node3D" parent="."]
+script = ExtResource("s_liquor")
+
+[node name="Casino" type="Node3D" parent="."]
+script = ExtResource("s_casino")
+
+[node name="Thimbles" type="Node3D" parent="."]
+script = ExtResource("s_small")
+kind = "thimbles"
+
+[node name="Gosha" type="CharacterBody3D" parent="Thimbles"]
+position = Vector3(0, 0.05, 0.2)
+rotation = Vector3(0, 3.14159, 0)
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("s_thimble")
+
+[node name="Shape" type="CollisionShape3D" parent="Thimbles/Gosha"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("NpcShape")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Thimbles/Gosha"]
+replication_config = SubResource("GoshaRepl")
+
+[node name="Fandomat" type="Node3D" parent="Shop"]
+position = Vector3(6.4, 0, 6.3)
+script = ExtResource("s_small")
+kind = "fandomat"
+
+[node name="LoaderJob" type="Node3D" parent="Shop"]
+position = Vector3(12, 0, -1)
+script = ExtResource("s_loader")
+
+[node name="Hide0_dumpster" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "dumpster"
+anchor = "shop"
+offset = Vector3(-11.3, 0, 1.5)
+
+[node name="Hide1_outhouse" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "outhouse"
+anchor = "house"
+offset = Vector3(7.0, 0, 0.3)
+
+[node name="Hide2_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = -130.0
+ring_off = 10.0
+
+[node name="Hide3_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = -92.0
+ring_off = 16.0
+
+[node name="Hide4_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = -40.0
+ring_off = 10.0
+
+[node name="Hide5_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = 48.0
+ring_off = 9.0
+
+[node name="Hide6_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = 85.0
+ring_off = 10.0
+
+[node name="Hide7_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = -35.0
+ring_off = -7.0
+
+[node name="Hide8_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = 40.0
+ring_off = -8.0
+
+[node name="Hide9_bush" type="Node3D" parent="."]
+script = ExtResource("s_hiding")
+kind = "bush"
+ring_phi = 150.0
+ring_off = -8.0
+
+[node name="Moonshine" type="Node3D" parent="House"]
+position = Vector3(3.4, 0, 1.9)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("s_moon")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="House/Moonshine"]
+replication_config = SubResource("MoonRepl")
+
+[node name="Garage" type="Node3D" parent="."]
+script = ExtResource("s_small")
+kind = "garage"
+
+[node name="Upgrades" type="Node3D" parent="House"]
+script = ExtResource("s_house_up")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="House/Upgrades"]
+replication_config = SubResource("HouseRepl")
+
+[node name="PoliceStation" type="Node3D" parent="."]
+script = ExtResource("s_police_st")
+
+[node name="Police" type="CharacterBody3D" parent="."]
+script = ExtResource("s_police")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Police"]
+replication_config = SubResource("PoliceRepl")
+
+[node name="Babka" type="Node3D" parent="."]
+script = ExtResource("s_babka")
+
+[node name="Boat0" type="CharacterBody3D" parent="."]
+script = ExtResource("s_vehicle")
+kind = "boat"
+rent_price = 150
+position = Vector3(2.5, 0, -12.0)
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Boat0"]
+replication_config = SubResource("VehRepl")
+
+[node name="Boat1" type="CharacterBody3D" parent="."]
+script = ExtResource("s_vehicle")
+kind = "boat"
+rent_price = 150
+position = Vector3(-2.5, 0, -12.5)
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Boat1"]
+replication_config = SubResource("VehRepl")
+
+[node name="Bike0" type="CharacterBody3D" parent="."]
+script = ExtResource("s_vehicle")
+kind = "bike"
+rent_price = 0
+home_spot = "house"
+home_offset = Vector3(-6.0, 0, 3.0)
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Bike0"]
+replication_config = SubResource("VehRepl")
+
+[node name="Bike1" type="CharacterBody3D" parent="."]
+script = ExtResource("s_vehicle")
+kind = "bike"
+rent_price = 0
+home_spot = "shop"
+home_offset = Vector3(-4.5, 0, 7.2)
+home_yaw = 1.5708
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Bike1"]
+replication_config = SubResource("VehRepl")
+
+[node name="Niva" type="CharacterBody3D" parent="."]
+script = ExtResource("s_vehicle")
+kind = "niva"
+rent_price = 300
+home_spot = "garage"
+home_offset = Vector3(0, 0, 0.3)
+home_yaw = 3.14159
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Niva"]
+replication_config = SubResource("VehRepl")
+
+[node name="Farm" type="Node3D" parent="."]
+script = ExtResource("s_farm")
+
+[node name="Cow" type="CharacterBody3D" parent="."]
+script = ExtResource("s_cow")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Cow"]
+replication_config = SubResource("CowRepl")
+
+[node name="Club" type="Node3D" parent="."]
+script = ExtResource("s_club")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Club"]
+replication_config = SubResource("ClubRepl")
+
+[node name="Brawler0" type="CharacterBody3D" parent="Club"]
+script = ExtResource("s_brawler")
+position = Vector3(-2.0, 0.05, 1.3)
+guest_name = "Кум Серёга"
+skin_id = 0
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Club/Brawler0"]
+replication_config = SubResource("BrawlRepl")
+
+[node name="Brawler1" type="CharacterBody3D" parent="Club"]
+script = ExtResource("s_brawler")
+position = Vector3(2.0, 0.05, 1.3)
+guest_name = "Дядя Вова"
+skin_id = 1
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Club/Brawler1"]
+replication_config = SubResource("BrawlRepl")
+
+[node name="RepairJob" type="Node3D" parent="."]
+script = ExtResource("s_repair")
+
+[node name="Nets" type="Node3D" parent="."]
+script = ExtResource("s_nets")
+
+[node name="Inspector" type="Node3D" parent="."]
+script = ExtResource("s_inspector")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="Inspector"]
+replication_config = SubResource("InspRepl")
+
+[node name="TsarSighting" type="Node3D" parent="."]
+script = ExtResource("s_tsar")
+
+[node name="Grass" type="Node3D" parent="."]
+script = ExtResource("s_grass")
+
+[node name="Decor" type="Node3D" parent="."]
+script = ExtResource("s_decor")
+
+[node name="Bottles" type="Node3D" parent="."]
+script = ExtResource("s_bottles")
+
+[node name="Spawner" type="MultiplayerSpawner" parent="Bottles"]
+spawn_path = NodePath("..")
+
+[node name="Mess" type="Node3D" parent="."]
+script = ExtResource("s_mess")
+
+[node name="Spawner" type="MultiplayerSpawner" parent="Mess"]
+spawn_path = NodePath("..")
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="PlayerSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../Players")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("s_hud")
+
+[node name="TraderUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_traderui")
+
+[node name="FishBookUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_bookui")
+
+[node name="InventoryUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_invui")
+
+[node name="CasinoUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_casinoui")
+
+[node name="StoreUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_storeui")
+
+[node name="GiveUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_giveui")
+
+[node name="HouseUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_houseui")
+
+[node name="MapUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_mapui")
+
+[node name="DayUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_dayui")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+script = ExtResource("s_pause")
+
+[node name="MainMenu" type="CanvasLayer" parent="."]
+script = ExtResource("s_menu")
+
+[node name="SettingsUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_settingsui")
+
+[node name="BribeUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_bribeui")
+
+[node name="DisputeUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_disputeui")
+
+[node name="RepairUI" type="CanvasLayer" parent="."]
+script = ExtResource("s_repairui")

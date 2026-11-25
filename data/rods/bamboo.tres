@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RodData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rod_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"bamboo"
+display_name = "Бамбуковая удочка"
+price = 300
+max_kg = 2.0
+reel_speed = 1.2
+max_cast = 14.0
+toughness = 0.8
+color = Color(0.85, 0.75, 0.45, 1)

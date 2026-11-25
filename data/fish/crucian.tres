@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fish_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"crucian"
+display_name = "Карась"
+description = "Любит тину и заросли. Ловится на тесто и кукурузу."
+rarity = 0
+base_chance = 26
+min_kg = 0.2
+max_kg = 1.5
+price_per_kg = 120
+strength = 1.0
+habitat = 1
+body_color = Color(0.72, 0.6, 0.3, 1)
+belly_color = Color(0.9, 0.82, 0.55, 1)
+fin_color = Color(0.6, 0.45, 0.25, 1)
+pattern = 0
+body_length = 0.85
+body_height = 1.35

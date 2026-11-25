@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DrinkData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/drink_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"beer"
+display_name = "Пиво «Поплавок»"
+price = 90
+strength = 12.0
+health_cost = 0.0
+bladder = 18.0
+bottle_color = Color(0.45, 0.28, 0.08, 1)
+shape = 0

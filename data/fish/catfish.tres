@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fish_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"catfish"
+display_name = "Сом"
+description = "Усатый великан глубины. Вытащить его — подвиг."
+rarity = 3
+base_chance = 1.2
+min_kg = 8.0
+max_kg = 45.0
+price_per_kg = 350
+strength = 2.0
+habitat = 2
+body_color = Color(0.22, 0.22, 0.2, 1)
+belly_color = Color(0.7, 0.68, 0.6, 1)
+fin_color = Color(0.18, 0.18, 0.16, 1)
+pattern = 4
+body_length = 1.6
+body_height = 0.8

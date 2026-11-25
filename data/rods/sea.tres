@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RodData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rod_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sea"
+display_name = "Сомовья снасть «Посейдон»"
+price = 14000
+max_kg = 55.0
+reel_speed = 1.6
+max_cast = 30.0
+toughness = 3.2
+color = Color(0.15, 0.2, 0.35, 1)

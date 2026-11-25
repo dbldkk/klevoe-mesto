@@ -1,0 +1,150 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/player/fishing.gd" id="2_fishing"]
+[ext_resource type="Script" path="res://scripts/world/delegate_interactable.gd" id="3_delegate"]
+[ext_resource type="Script" path="res://scripts/art/character_model.gd" id="4_model"]
+
+[sub_resource type="CapsuleShape3D" id="Shape_body"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_bobber"]
+albedo_color = Color(0.95, 0.15, 0.1, 1)
+
+[sub_resource type="SphereMesh" id="Mesh_bobber"]
+material = SubResource("Mat_bobber")
+radius = 0.07
+height = 0.14
+radial_segments = 12
+rings = 6
+
+[sub_resource type="CapsuleShape3D" id="Shape_interact"]
+radius = 0.45
+height = 1.9
+
+[sub_resource type="SceneReplicationConfig" id="Replication"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:head_pitch")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:player_name")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:fish_state")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:bobber_pos")
+properties/5/spawn = true
+properties/5/replication_mode = 1
+properties/6/path = NodePath(".:held_kind")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:held_id")
+properties/7/spawn = true
+properties/7/replication_mode = 2
+properties/8/path = NodePath(".:held_cond")
+properties/8/spawn = true
+properties/8/replication_mode = 2
+properties/9/path = NodePath(".:drunk")
+properties/9/spawn = true
+properties/9/replication_mode = 1
+properties/10/path = NodePath(".:pose")
+properties/10/spawn = true
+properties/10/replication_mode = 2
+properties/11/path = NodePath(".:stinky")
+properties/11/spawn = true
+properties/11/replication_mode = 2
+properties/12/path = NodePath(".:skin")
+properties/12/spawn = true
+properties/12/replication_mode = 2
+properties/13/path = NodePath(".:sleeping")
+properties/13/spawn = true
+properties/13/replication_mode = 2
+properties/14/path = NodePath(".:hidden")
+properties/14/spawn = true
+properties/14/replication_mode = 2
+properties/15/path = NodePath(".:carrying")
+properties/15/spawn = true
+properties/15/replication_mode = 2
+properties/16/path = NodePath(".:light_on")
+properties/16/spawn = true
+properties/16/replication_mode = 2
+properties/17/path = NodePath(".:vehicle_path")
+properties/17/spawn = true
+properties/17/replication_mode = 2
+properties/18/path = NodePath(".:seat")
+properties/18/spawn = true
+properties/18/replication_mode = 2
+properties/19/path = NodePath(".:carry_kind")
+properties/19/spawn = true
+properties/19/replication_mode = 2
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 8
+collision_mask = 13
+floor_max_angle = 0.8
+floor_snap_length = 0.3
+script = ExtResource("1_player")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("Shape_body")
+
+[node name="Body" type="Node3D" parent="."]
+
+[node name="Model" type="Node3D" parent="Body"]
+script = ExtResource("4_model")
+
+[node name="Head" type="Node3D" parent="."]
+position = Vector3(0, 1.6, 0)
+
+[node name="FPCamera" type="Camera3D" parent="Head"]
+fov = 75.0
+near = 0.03
+
+[node name="FPHand" type="Node3D" parent="Head"]
+position = Vector3(0.32, -0.32, -0.42)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="Head"]
+position = Vector3(0.5, 0.35, 0)
+collision_mask = 1
+spring_length = 4.0
+margin = 0.2
+
+[node name="TPCamera" type="Camera3D" parent="Head/SpringArm3D"]
+fov = 70.0
+
+[node name="InteractArea" type="Area3D" parent="."]
+script = ExtResource("3_delegate")
+
+[node name="Shape" type="CollisionShape3D" parent="InteractArea"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("Shape_interact")
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.25, 0)
+billboard = 1
+no_depth_test = true
+text = "Рыбак"
+font_size = 40
+outline_size = 10
+
+[node name="Fishing" type="Node3D" parent="."]
+script = ExtResource("2_fishing")
+
+[node name="Bobber" type="MeshInstance3D" parent="Fishing"]
+top_level = true
+mesh = SubResource("Mesh_bobber")
+
+[node name="Line" type="MeshInstance3D" parent="Fishing"]
+top_level = true
+cast_shadow = 0
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("Replication")

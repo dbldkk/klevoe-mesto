@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DrinkData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/drink_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"wine"
+display_name = "Вино «Шато Камыш»"
+price = 250
+strength = 20.0
+health_cost = 1.0
+bladder = 8.0
+bottle_color = Color(0.25, 0.06, 0.15, 1)
+shape = 1

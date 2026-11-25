@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RodData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rod_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"telescopic"
+display_name = "Телескопическая удочка"
+price = 1200
+max_kg = 5.0
+reel_speed = 1.8
+max_cast = 20.0
+toughness = 1.2
+color = Color(0.2, 0.35, 0.8, 1)

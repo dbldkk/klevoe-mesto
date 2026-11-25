@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BaitData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/bait_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"worm"
+display_name = "Червь"
+description = "Классика. Клюёт почти всё."
+price = 70
+pack_size = 15
+bite_speed = 1.25
+fish_multipliers = Dictionary[StringName, float]({&"perch": 1.8, &"ruffe": 2.0, &"tench": 1.5, &"bream": 1.3, &"zander": 1.2})
+min_rarity = 0
+rare_bonus = 1.0
+satiety = 0.0
+in_shop = true

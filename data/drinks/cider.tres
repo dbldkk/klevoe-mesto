@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DrinkData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/drink_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cider"
+display_name = "Сидр «Яблочко»"
+price = 120
+strength = 10.0
+health_cost = 0.0
+bladder = 15.0
+bottle_color = Color(0.25, 0.5, 0.2, 1)
+shape = 0

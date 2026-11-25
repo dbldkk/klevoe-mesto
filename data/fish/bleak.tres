@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fish_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"bleak"
+display_name = "Уклейка"
+description = "Мелкая серебристая рыбёшка. Клюёт на всё, стоит копейки."
+rarity = 0
+base_chance = 30
+min_kg = 0.03
+max_kg = 0.12
+price_per_kg = 60
+strength = 0.6
+habitat = 0
+body_color = Color(0.62, 0.7, 0.78, 1)
+belly_color = Color(0.95, 0.96, 0.98, 1)
+fin_color = Color(0.75, 0.75, 0.7, 1)
+pattern = 0
+body_length = 1.1
+body_height = 0.8

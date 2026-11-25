@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BaitData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/bait_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sausage"
+display_name = "Сосиски"
+description = "Для хищника. Щука и сом не устоят."
+price = 150
+pack_size = 8
+bite_speed = 0.9
+fish_multipliers = Dictionary[StringName, float]({&"bleak": 0.2, &"roach": 0.3, &"crucian": 0.4, &"perch": 2.0, &"pike": 3.5, &"zander": 2.5, &"catfish": 3.0})
+min_rarity = 0
+rare_bonus = 1.0
+satiety = 30.0
+in_shop = true

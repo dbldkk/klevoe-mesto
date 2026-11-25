@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fish_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pike"
+display_name = "Щука"
+description = "Зубастая королева зарослей. Берёт на сосиску и живца."
+rarity = 3
+base_chance = 3
+min_kg = 2.0
+max_kg = 12.0
+price_per_kg = 400
+strength = 1.6
+habitat = 1
+body_color = Color(0.38, 0.48, 0.28, 1)
+belly_color = Color(0.88, 0.88, 0.75, 1)
+fin_color = Color(0.6, 0.45, 0.25, 1)
+pattern = 2
+body_length = 1.7
+body_height = 0.75

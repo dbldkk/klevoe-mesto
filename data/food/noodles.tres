@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FoodData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/food_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"noodles"
+display_name = "Лапша «Бомж-пакет»"
+price = 60
+satiety = 35.0
+bowel = 10.0
+health = 0.0

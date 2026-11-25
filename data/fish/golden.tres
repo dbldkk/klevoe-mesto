@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fish_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"golden"
+display_name = "Золотой карась"
+description = "Легенда этих мест. Говорят, исполняет желания. Или просто дорого стоит."
+rarity = 4
+base_chance = 0.3
+min_kg = 0.5
+max_kg = 2.0
+price_per_kg = 5000
+strength = 1.8
+habitat = 0
+body_color = Color(1.0, 0.75, 0.15, 1)
+belly_color = Color(1.0, 0.9, 0.5, 1)
+fin_color = Color(1.0, 0.6, 0.1, 1)
+pattern = 3
+body_length = 0.85
+body_height = 1.35

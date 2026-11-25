@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fish_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tench"
+display_name = "Линь"
+description = "Золотисто-зелёный житель зарослей. Сильный и упрямый."
+rarity = 1
+base_chance = 8
+min_kg = 0.5
+max_kg = 3.0
+price_per_kg = 260
+strength = 1.4
+habitat = 1
+body_color = Color(0.35, 0.42, 0.2, 1)
+belly_color = Color(0.75, 0.7, 0.35, 1)
+fin_color = Color(0.3, 0.35, 0.2, 1)
+pattern = 0
+body_length = 1.05
+body_height = 1.0

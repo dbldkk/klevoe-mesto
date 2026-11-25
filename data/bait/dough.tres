@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BaitData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/bait_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"dough"
+display_name = "Тесто"
+description = "Ароматное, с анисом. Мирная рыба в восторге."
+price = 60
+pack_size = 12
+bite_speed = 1.0
+fish_multipliers = Dictionary[StringName, float]({&"crucian": 2.5, &"carp": 2.2, &"tench": 1.8, &"bream": 1.6, &"perch": 0.2, &"pike": 0.1})
+min_rarity = 0
+rare_bonus = 1.0
+satiety = 10.0
+in_shop = true

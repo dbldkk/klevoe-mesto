@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RodData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rod_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"spinning"
+display_name = "Спиннинг «Хищник»"
+price = 2200
+max_kg = 8.0
+reel_speed = 2.3
+max_cast = 30.0
+toughness = 1.4
+color = Color(0.12, 0.2, 0.45, 1)

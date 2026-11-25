@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fish_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"bream"
+display_name = "Лещ"
+description = "Высокий и плоский. Стаями ходит у дна, любит кукурузу."
+rarity = 2
+base_chance = 9
+min_kg = 1.0
+max_kg = 5.0
+price_per_kg = 250
+strength = 1.1
+habitat = 0
+body_color = Color(0.55, 0.5, 0.4, 1)
+belly_color = Color(0.85, 0.8, 0.65, 1)
+fin_color = Color(0.4, 0.38, 0.35, 1)
+pattern = 0
+body_length = 0.9
+body_height = 1.6

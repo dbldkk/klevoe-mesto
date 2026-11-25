@@ -1,0 +1,16 @@
+# Godot-generated files
+.godot/
+/android/
+export_credentials.cfg
+override.cfg
+
+# Local builds and archives (distributed through GitHub Releases)
+/build/*.exe
+/build/*.pck
+/build/*.zip
+/build/*.rar
+/build/*.part*
+*.log
+__pycache__/
+.env
+.env.*

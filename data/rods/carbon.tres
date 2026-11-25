@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RodData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rod_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"carbon"
+display_name = "Карбоновая удочка"
+price = 4000
+max_kg = 12.0
+reel_speed = 2.6
+max_cast = 26.0
+toughness = 1.8
+color = Color(0.12, 0.12, 0.12, 1)

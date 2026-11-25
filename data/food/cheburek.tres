@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FoodData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/food_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cheburek"
+display_name = "Чебурек"
+price = 90
+satiety = 40.0
+bowel = 25.0
+health = 0.0
