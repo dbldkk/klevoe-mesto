@@ -1,0 +1,70 @@
+{
+  "done": 98,
+  "total": 98,
+  "by_speaker": {
+    "alina": {
+      "done": 2,
+      "total": 2
+    },
+    "bouncer": {
+      "done": 6,
+      "total": 6
+    },
+    "dealer": {
+      "done": 5,
+      "total": 5
+    },
+    "gena": {
+      "done": 5,
+      "total": 5
+    },
+    "katya": {
+      "done": 2,
+      "total": 2
+    },
+    "mikhalych": {
+      "done": 5,
+      "total": 5
+    },
+    "nika": {
+      "done": 2,
+      "total": 2
+    },
+    "nina": {
+      "done": 5,
+      "total": 5
+    },
+    "petrovich": {
+      "done": 7,
+      "total": 7
+    },
+    "semenov": {
+      "done": 6,
+      "total": 6
+    },
+    "semenych": {
+      "done": 6,
+      "total": 6
+    },
+    "thimble": {
+      "done": 5,
+      "total": 5
+    },
+    "tolya": {
+      "done": 11,
+      "total": 11
+    },
+    "valya": {
+      "done": 6,
+      "total": 6
+    },
+    "zina": {
+      "done": 9,
+      "total": 9
+    },
+    "zoya": {
+      "done": 16,
+      "total": 16
+    }
+  }
+}

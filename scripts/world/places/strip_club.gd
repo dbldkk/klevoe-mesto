@@ -6,13 +6,25 @@ extends Node3D
 const COVER := 200
 const MAX_DRUNK := 75.0
 const TIP := 50
+const TIP_AMOUNTS := [50, 100, 500]
 const PRIVATE := 400
 
 var _inside := false
+var _bouncer: CharacterModel
 var _dancers: Array[CharacterModel] = []
 var _t := 0.0
 var _fade: ColorRect
 var _private_t := 0.0
+var _flourish: Array[float] = []
+var _notes: Array[CPUParticles3D] = []
+var _dancer_ids: Array[String] = []
+var _dancer_names: Array[String] = []
+var _dancer_pole: Array[bool] = []
+var _home: Array[Vector3] = []
+var _tip_ui: CanvasLayer
+var _tip_title: Label
+var _tip_status: Label
+var _tip_idx := -1
 
 
 ## Пусто — можно войти; "money" / "drunk" — причина отказа (для тестов и вышибалы).
@@ -26,14 +38,18 @@ static func entry_reason(money: int, drunk: float) -> String:
 
 func _ready() -> void:
 	transform = Layout.xform("strip_club")
+	var s: Array = Layout.SPOTS["strip_club"]
+	Layout.snap_to_ground(self, float(s[2]), float(s[3]))
 	add_to_group("poi")
 	set_meta("poi_name", "Клуб «Неон»")
+	set_meta("poi_spot", "strip_club")
 	var st := Node3D.new()
 	st.name = "Static"
 	add_child(st)
 	_build(st)
 	_spawn_people()
 	_make_fade()
+	_make_tip_ui()
 
 
 func _build(st: Node3D) -> void:
@@ -41,15 +57,22 @@ func _build(st: Node3D) -> void:
 	var floor := Art.color(Color(0.08, 0.07, 0.09), 0.7)
 	var velvet := Art.color(Color(0.35, 0.05, 0.12), 0.85)
 	var gold := Art.color(Color(0.75, 0.6, 0.2), 0.4, 0.5)
-	# коробка: вход с +Z (к дороге)
-	Build.block(st, Vector3(0, 0.02, 0), Vector3(12.0, 0.05, 10.0), floor, false)
-	Build.block(st, Vector3(0, 3.2, -5.0), Vector3(12.2, 3.2, 0.2), wall, true)
-	Build.block(st, Vector3(-6.05, 3.2, 0), Vector3(0.2, 3.2, 10.0), wall, true)
-	Build.block(st, Vector3(6.05, 3.2, 0), Vector3(0.2, 3.2, 10.0), wall, true)
-	Build.block(st, Vector3(0, 3.2, 5.0), Vector3(12.2, 3.2, 0.2), wall, true)
+	# коробка стоит на земле: стены от пола до крыши (центр = половина высоты).
+	# Фундамент уходит в грунт, чтобы край площадки не просвечивал.
+	var found := Art.color(Color(0.18, 0.12, 0.14), 0.95)
+	Build.block(st, Vector3(0, -0.55, 0), Vector3(12.6, 1.1, 10.6), found, true)
+	Build.block(st, Vector3(0, 0.04, 0), Vector3(12.0, 0.08, 10.0), floor, true)
+	# стены 0..4.8 м
+	Build.block(st, Vector3(0, 2.4, -5.0), Vector3(12.2, 4.8, 0.2), wall, true)
+	Build.block(st, Vector3(-6.05, 2.4, 0), Vector3(0.2, 4.8, 10.0), wall, true)
+	Build.block(st, Vector3(6.05, 2.4, 0), Vector3(0.2, 4.8, 10.0), wall, true)
+	# фасад с проёмом для входа (2 м шириной, 2.5 м высотой) — без коллизии в проходе
+	Build.block(st, Vector3(-3.55, 2.4, 5.0), Vector3(5.1, 4.8, 0.2), wall, true)
+	Build.block(st, Vector3(3.55, 2.4, 5.0), Vector3(5.1, 4.8, 0.2), wall, true)
+	Build.block(st, Vector3(0, 3.65, 5.0), Vector3(2.1, 2.3, 0.2), wall, true)  # перемычка
 	Build.block(st, Vector3(0, 4.85, 0), Vector3(12.4, 0.15, 10.4), Art.color(Color(0.08, 0.05, 0.1)), false)
-	# дверь
-	Build.block(st, Vector3(0, 1.3, 5.05), Vector3(1.6, 2.5, 0.12), Art.color(Color(0.15, 0.08, 0.18)), true)
+	# открытая дверь сбоку, не перекрывает проход
+	Build.block(st, Vector3(1.15, 1.25, 5.55), Vector3(0.08, 2.5, 1.0), Art.color(Color(0.15, 0.08, 0.18)), true, Vector3(0, 0.6, 0))
 	# сцена и пилон
 	Build.block(st, Vector3(0, 0.35, -2.8), Vector3(5.2, 0.7, 3.2), velvet, true)
 	Art.add_mesh(st, Art.cyl(0.04, 0.04, 3.4, 10), gold, Vector3(0, 2.4, -2.8))
@@ -93,20 +116,18 @@ func _neon(st: Node3D, pos: Vector3, txt: String, col: Color) -> void:
 		lbl.modulate = col
 
 
-func _lingerie(m: CharacterModel) -> void:
-	# Бельё = короткий топ + короткие шорты, без анатомической наготы.
+func _dress_dancer(m: CharacterModel, def: Dictionary) -> void:
+	m.female = true
+	m.lingerie = int(def["lingerie"])
+	m.stockings = bool(def["stockings"])
 	m.outfit = 0
 	m.stripes = false
 	m.hat = CharacterModel.Hat.NONE
-	m.shirt = Color(0.75, 0.35, 0.55)
-	m.pants = Color(0.15, 0.08, 0.12)
-	m.skin = CharacterModel.SKINS[0]
+	m.face_name = String(def["face"])
+	m.hair_color = def["hair"]
+	m.skin = CharacterModel.SKINS[int(def["skin"])]
 	m.fat = false
-	# чуть короче штаны: используем тот же меш, тёмный, как «шортики» за счёт цвета + компакт
-	m.height_scale = 1.0
-	m.restyle()
-	# визуально «топ»: уже есть рубашка; для танцовщиц перекрашиваем торс плотнее через restyle default
-	# Дополнительно — не расстёгиваем и не оголяем (outfit 0).
+	m.height_scale = float(def.get("height", 1.0))
 
 
 func _spawn_people() -> void:
@@ -120,21 +141,49 @@ func _spawn_people() -> void:
 	b.hat = CharacterModel.Hat.BALD
 	b.height_scale = 1.12
 	add_child(b)
+	_bouncer = b
+	Chatter.attach.call_deferred(b, "m_low", SpeechBank.bouncer(), 2.5, 5.0, "bouncer")
 	Build.talk_area(self, Vector3(0, 1.2, 5.3), Vector3(2.4, 2.4, 1.8), self)
 
-	for i in 3:
+	# три танцовщицы: женская фигура, длинные волосы, бельё разных цветов
+	var defs: Array = [
+		{"id": "alina", "name": "Алина", "face": "dancer_a", "hair": Color(0.08, 0.05, 0.04),
+			"skin": 0, "lingerie": 1, "stockings": true, "pole": true, "height": 1.02,
+			"pos": Vector3(0.0, 0.7, -2.8)},
+		{"id": "katya", "name": "Катя", "face": "dancer_b", "hair": Color(0.38, 0.16, 0.08),
+			"skin": 1, "lingerie": 2, "stockings": true, "pole": false, "height": 0.98,
+			"pos": Vector3(-1.6, 0.7, -2.5)},
+		{"id": "nika", "name": "Ника", "face": "dancer_c", "hair": Color(0.55, 0.42, 0.22),
+			"skin": 0, "lingerie": 3, "stockings": false, "pole": false, "height": 1.0,
+			"pos": Vector3(1.6, 0.7, -2.2)},
+	]
+	for def in defs:
 		var d := CharacterModel.new()
-		d.name = "Dancer%d" % i
-		d.position = Vector3(-1.4 + i * 1.4, 0.7, -2.8)
+		d.name = "Dancer_%s" % def["id"]
+		_dress_dancer(d, def)
+		d.position = def["pos"]
 		d.rotation.y = PI
-		_lingerie(d)
-		# более короткий силуэт: после restyle ничего анатомического не добавляем
 		add_child(d)
 		_dancers.append(d)
+		_dancer_ids.append(String(def["id"]))
+		_dancer_names.append(String(def["name"]))
+		_dancer_pole.append(bool(def["pole"]))
+		_home.append(def["pos"])
+		_flourish.append(0.0)
+		_notes.append(_make_notes(d))
+		var lbl := Label3D.new()
+		lbl.text = String(def["name"])
+		lbl.font_size = 42
+		lbl.pixel_size = 0.012
+		lbl.position = Vector3(0, 2.15, 0)
+		lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		lbl.modulate = Color(1.0, 0.75, 0.88)
+		d.add_child(lbl)
 		var tip := _Tip.new()
 		tip.club = self
 		tip.kind = "tip"
-		tip.position = d.position + Vector3(0, 0, 0.8)
+		tip.dancer_idx = _dancers.size() - 1
+		tip.position = d.position + Vector3(0, 0.8, 0.85)
 		add_child(tip)
 	var priv := _Tip.new()
 	priv.club = self
@@ -152,6 +201,32 @@ func _spawn_people() -> void:
 	add_child(bar)
 
 
+func _make_notes(at: Node3D) -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 0.92
+	p.amount = 18
+	p.lifetime = 1.5
+	p.position = Vector3(0, 1.2, 0)
+	p.direction = Vector3(0, 1, 0)
+	p.spread = 55.0
+	p.initial_velocity_min = 1.4
+	p.initial_velocity_max = 3.2
+	p.gravity = Vector3(0, -4.5, 0)
+	p.angular_velocity_min = -8.0
+	p.angular_velocity_max = 8.0
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.12, 0.002, 0.06)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.32, 0.62, 0.28)
+	mat.roughness = 0.7
+	mesh.material = mat
+	p.mesh = mesh
+	at.add_child(p)
+	return p
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	for i in _dancers.size():
@@ -159,11 +234,25 @@ func _process(delta: float) -> void:
 		if d == null or not is_instance_valid(d):
 			continue
 		var phase := _t * (1.6 + i * 0.25) + i
-		d.rotation.y = PI + sin(phase) * 0.5
-		d.position.y = 0.7 + absf(sin(phase * 2.0)) * 0.08
+		if _dancer_pole[i]:
+			# танец у пилона: кружение вокруг шеста
+			var spin := _t * 1.35
+			var r := 0.22
+			d.position = Vector3(sin(spin) * r, _home[i].y + absf(sin(phase * 2.2)) * 0.1, _home[i].z + cos(spin) * r)
+			d.rotation.y = spin + PI * 0.5
+		else:
+			d.rotation.y = PI + sin(phase) * 0.55
+			d.position.y = _home[i].y + absf(sin(phase * 2.0)) * 0.08
 		if d.spine:
-			d.spine.rotation.z = sin(phase * 1.3) * 0.2
-			d.spine.rotation.x = sin(phase * 0.8) * 0.08
+			d.spine.rotation.z = sin(phase * 1.3) * 0.22
+			d.spine.rotation.x = sin(phase * 0.8) * 0.1
+		if i < _flourish.size() and _flourish[i] > 0.0:
+			_flourish[i] -= delta
+			d.rotation.y += delta * 7.0
+			if d.spine:
+				d.spine.rotation.x += sin(_t * 10.0) * 0.18
+			if d.arm_r:
+				d.arm_r.rotation.x = -1.2 + sin(_t * 8.0) * 0.3
 	if _private_t > 0.0:
 		_private_t -= delta
 		if _fade:
@@ -187,6 +276,76 @@ func _make_fade() -> void:
 	layer.add_child(_fade)
 
 
+func _make_tip_ui() -> void:
+	_tip_ui = CanvasLayer.new()
+	_tip_ui.layer = 8
+	_tip_ui.visible = false
+	add_child(_tip_ui)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.45)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tip_ui.add_child(dim)
+	var panel := UiKit.panel(Vector2(420, 0), Color(0.1, 0.07, 0.1, 0.95))
+	_tip_ui.add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	panel.add_child(v)
+	v.add_child(UiKit.title("ЧАЕВЫЕ", Color(1.0, 0.55, 0.8)))
+	_tip_title = UiKit.label("", 20, Color(1, 0.9, 0.95))
+	_tip_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(_tip_title)
+	_tip_status = UiKit.label("", 16, Color(1, 1, 1, 0.7))
+	_tip_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(_tip_status)
+	for amt in TIP_AMOUNTS:
+		v.add_child(UiKit.button("Дать %d ₽" % amt, _confirm_tip.bind(amt)))
+	v.add_child(UiKit.button("Отмена", _close_tip_ui))
+
+
+func _open_tip(idx: int) -> void:
+	if idx < 0 or idx >= _dancer_names.size():
+		return
+	_tip_idx = idx
+	_tip_title.text = "Дать денег %s" % _dancer_names[idx]
+	_tip_status.text = "У тебя %d ₽" % Inventory.money
+	_tip_ui.visible = true
+	Events.ui_open = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _close_tip_ui() -> void:
+	if _tip_ui == null or not _tip_ui.visible:
+		return
+	_tip_ui.visible = false
+	_tip_idx = -1
+	Events.ui_open = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	var p := get_tree().get_first_node_in_group("local_player")
+	if p:
+		p.input_cooldown = 0.3
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _tip_ui and _tip_ui.visible and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		_close_tip_ui()
+
+
+func _confirm_tip(amount: int) -> void:
+	if _tip_idx < 0:
+		return
+	if Inventory.money < amount:
+		Events.notify("На чай не хватает (%d ₽)" % amount, Color.TOMATO)
+		_tip_status.text = "Не хватает. У тебя %d ₽" % Inventory.money
+		return
+	Inventory.money -= amount
+	Inventory.changed.emit()
+	var idx := _tip_idx
+	_close_tip_ui()
+	Sfx.play("coin", global_position, -8.0)
+	NetUtil.call_all(self, "tip_fx", [idx, amount])
+
+
 func get_prompt(_player: Node) -> String:
 	if _inside:
 		return "Выйти из «Неона»"
@@ -203,13 +362,16 @@ func interact(player: Node) -> void:
 		_inside = false
 		if player is Node3D:
 			(player as Node3D).global_position = to_global(Vector3(0, 0.2, 6.4))
+		_bounce_say("Ну, заходи ещё.")
 		Events.notify("Ну, заходи ещё.", Color(0.9, 0.75, 0.85))
 		return
 	var why := entry_reason(Inventory.money, Inventory.drunk)
 	if why == "drunk":
+		_bounce_say("Ой, братан, ты слишком весёлый. Проспись и приходи.")
 		Events.notify("Вышибала качает головой: «Проспись и приходи.»", Color(0.9, 0.6, 0.5))
 		return
 	if why == "money":
+		_bounce_say("Вход двести рублей. Без денег и без скандала, тогда милости прошу.")
 		Events.notify("Вход %d ₽. У тебя не хватает." % COVER, Color.TOMATO)
 		return
 	Inventory.money -= COVER
@@ -217,19 +379,59 @@ func interact(player: Node) -> void:
 	_inside = true
 	if player is Node3D:
 		(player as Node3D).global_position = to_global(Vector3(0, 0.2, 3.2))
+	_bounce_say("Добро пожаловать в «Неон». Чаевые — у сцены, приват — ближе к пилону.")
 	Events.notify("Добро пожаловать в «Неон». Чаевые — у сцены, приват — ближе к пилону.", Color(1.0, 0.55, 0.8))
 	Sfx.play("cash", global_position, -8.0)
 
 
+func _bounce_say(text: String) -> void:
+	var pos := global_position + Vector3(1.4, 1.7, 4.4)
+	if _bouncer and is_instance_valid(_bouncer):
+		pos = _bouncer.global_position + Vector3(0, 1.7, 0)
+	Sfx.say(pos, "m_low", text, "bouncer")
+
+
 func tip() -> bool:
-	if Inventory.money < TIP:
-		Events.notify("На чай не хватает (%d ₽)" % TIP, Color.TOMATO)
+	# совместимость со старым вызовом «50 ₽»
+	if _dancers.is_empty():
 		return false
-	Inventory.money -= TIP
-	Inventory.changed.emit()
-	Events.notify("Танцовщица улыбается и кланяется.", Color(1.0, 0.7, 0.85))
-	Sfx.play("coin", global_position, -8.0)
+	_open_tip(0)
 	return true
+
+
+func tip_dancer(idx: int) -> void:
+	_open_tip(idx)
+
+
+@rpc("any_peer", "reliable")
+func tip_fx(idx: int, amount: int) -> void:
+	if idx < 0 or idx >= _dancers.size():
+		return
+	if idx < _flourish.size():
+		_flourish[idx] = 2.2
+	if idx < _notes.size() and _notes[idx]:
+		_notes[idx].restart()
+		_notes[idx].emitting = true
+	var nm := _dancer_names[idx] if idx < _dancer_names.size() else "Танцовщица"
+	var line := _tip_line(idx, amount)
+	Events.notify("%s: «%s»" % [nm, line], Color(1.0, 0.7, 0.85))
+	var d := _dancers[idx]
+	var pos := d.global_position + Vector3(0, 1.7, 0)
+	var speaker := _dancer_ids[idx] if idx < _dancer_ids.size() else "alina"
+	Sfx.say(pos, "f_high", line, speaker)
+
+
+func _tip_line(idx: int, amount: int) -> String:
+	var id := _dancer_ids[idx] if idx < _dancer_ids.size() else "alina"
+	var bank: Array = SpeechBank.alina()
+	if id == "katya":
+		bank = SpeechBank.katya()
+	elif id == "nika":
+		bank = SpeechBank.nika()
+	if bank.is_empty():
+		return "Спасибо, дорогой."
+	# щедрые чаевые — вторая реплика
+	return String(bank[1] if amount >= 100 and bank.size() > 1 else bank[0])
 
 
 func _private_dance(player: Node) -> void:
@@ -248,6 +450,7 @@ func _private_dance(player: Node) -> void:
 class _Tip extends Area3D:
 	var club: Node
 	var kind := "tip"
+	var dancer_idx := -1
 
 	func _ready() -> void:
 		collision_layer = 16
@@ -261,12 +464,15 @@ class _Tip extends Area3D:
 	func get_prompt(_player: Node) -> String:
 		if kind == "private":
 			return "Заказать приватный танец (%d ₽)" % PRIVATE
-		return "Дать на чай (%d ₽)" % TIP
+		var nm := "танцовщице"
+		if club and dancer_idx >= 0 and club.get("_dancer_names") and dancer_idx < club._dancer_names.size():
+			nm = club._dancer_names[dancer_idx]
+		return "Дать денег %s (50 / 100 / 500 ₽)" % nm
 
 	func interact(player: Node) -> void:
 		if club == null:
 			return
 		if kind == "private" and club.has_method("_private_dance"):
 			club._private_dance(player)
-		elif club.has_method("tip"):
-			club.tip()
+		elif club.has_method("tip_dancer"):
+			club.tip_dancer(dancer_idx)

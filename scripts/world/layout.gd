@@ -24,13 +24,19 @@ const SPOTS := {
 	"club": [-160.0, 13.5, 11.0, 8.5],
 	"repair": [96.0, 8.5, 3.2, 3.6],
 	"garages": [125.0, 13.0, 8.0, 5.0],
-	"ruins": [175.0, 18.0, 8.0, 6.0],
-	"chapel": [-178.0, 12.0, 5.0, 4.0],
+	"ruins": [168.0, 34.0, 8.0, 6.0],
+	"chapel": [-117.0, 28.0, 5.0, 4.0],
 	"dachas": [-80.0, 22.0, 8.0, 6.0],
 	"forest": [48.0, 26.0, 10.0, 8.0],
-	"campfire": [12.0, -5.5, 3.0, 3.0],
+	"campfire": [8.0, -16.0, 3.0, 3.0],
 	"strip_club": [108.0, 16.0, 8.0, 6.5],
 }
+
+## Новые места v1.1+. Проверяются тестами на сушу, берег, дорогу и пересечения.
+const NEW_POIS := ["garages", "ruins", "chapel", "dachas", "forest", "campfire", "strip_club"]
+## Эти площадки не ровняем в ноль: часовня и руины стоят на холме, костёр — на берегу.
+const NATURAL := ["chapel", "ruins", "campfire"]
+const SHORE_MARGIN := 4.0
 
 
 ## Точка на эллипсе дороги, сдвинутая наружу на off метров (по нормали).
@@ -69,7 +75,7 @@ static func _spots_inv() -> Array:
 	if _inv.is_empty():
 		for k in SPOTS:
 			var s: Array = SPOTS[k]
-			_inv.append([xform(k).affine_inverse(), s[2], s[3]])
+			_inv.append([xform(k).affine_inverse(), s[2], s[3], k])
 	return _inv
 
 
@@ -107,6 +113,8 @@ static func road_distance(x: float, z: float) -> float:
 static func flat_factor(x: float, z: float, margin := 3.0) -> float:
 	var f := 1.0 - Terrain.smooth(ROAD_W / 2 + 0.5, ROAD_W / 2 + 0.5 + margin, road_distance(x, z))
 	for s in _spots_inv():
+		if String(s[3]) in NATURAL:
+			continue
 		var l: Vector3 = s[0] * Vector3(x, 0, z)
 		var dd := maxf(absf(l.x) - s[1], absf(l.z) - s[2])
 		f = maxf(f, 1.0 - Terrain.smooth(0.0, margin, dd))
@@ -131,3 +139,81 @@ static func is_busy(x: float, z: float, pad := 1.0) -> bool:
 		if absf(l.x) < s[1] + pad and absf(l.z) < s[2] + pad:
 			return true
 	return false
+
+
+## Минимальная высота земли под площадкой (по сетке углов и центра).
+static func min_height(spot: String) -> float:
+	var h := 999.0
+	for p in footprint_points(spot):
+		h = minf(h, Terrain.height(p.x, p.z))
+	return h
+
+
+## Точки контура площадки (центр + 8 по периметру) в мире, y земли не учитывается.
+static func footprint_points(spot: String, pad := 0.0) -> Array[Vector3]:
+	var s: Array = SPOTS[spot]
+	var xf := xform(spot)
+	var hx := float(s[2]) + pad
+	var hz := float(s[3]) + pad
+	var pts: Array[Vector3] = []
+	for u in [-1.0, 0.0, 1.0]:
+		for v in [-1.0, 0.0, 1.0]:
+			pts.append(xf * Vector3(u * hx, 0.0, v * hz))
+	return pts
+
+
+## Поставить узел на минимальную высоту земли под контуром (hx, hz — полуразмеры, м).
+static func snap_to_ground(node: Node3D, hx: float, hz: float) -> float:
+	# у узла вне дерева global_transform — единичный; берём локальный.
+	var xf := node.global_transform if node.is_inside_tree() else node.transform
+	var min_h := 999.0
+	for u in [-1.0, 0.0, 1.0]:
+		for v in [-1.0, 0.0, 1.0]:
+			var p: Vector3 = xf * Vector3(u * hx, 0.0, v * hz)
+			min_h = minf(min_h, Terrain.height(p.x, p.z))
+	if node.is_inside_tree():
+		var gp := node.global_position
+		gp.y = min_h
+		node.global_position = gp
+	else:
+		var tr := node.transform
+		tr.origin.y = min_h
+		node.transform = tr
+	return min_h
+
+
+## Пусто — площадка на суше, не на дороге, не пересекается с другими и не в воде.
+static func placement_problems(spot: String, shore := SHORE_MARGIN) -> PackedStringArray:
+	var out: PackedStringArray = []
+	if not SPOTS.has(spot):
+		out.append("missing")
+		return out
+	var wet := 0
+	var shore_hits := 0
+	var road := 0
+	var min_h := 999.0
+	for p in footprint_points(spot, 0.4):
+		var h := Terrain.height(p.x, p.z)
+		var d := Terrain.depth(p.x, p.z)
+		var ld := Terrain.lake_distance(p.x, p.z).x
+		min_h = minf(min_h, h)
+		if d > 0.0 or h < Terrain.WATER_Y + 0.05:
+			wet += 1
+		if ld < shore:
+			shore_hits += 1
+		if road_distance(p.x, p.z) < ROAD_W / 2.0 + 0.6:
+			road += 1
+	if wet > 0:
+		out.append("water")
+	if shore_hits > 0:
+		out.append("shore")
+	if road > 0:
+		out.append("road")
+	# пересечение с другой постройкой (с запасом 1 м)
+	var mid := xform(spot).origin
+	for k in SPOTS:
+		if String(k) == spot:
+			continue
+		if spot_contains(String(k), mid.x, mid.z, 1.0):
+			out.append("overlap:%s" % k)
+	return out

@@ -23,9 +23,17 @@ func _ready() -> void:
 func _spot(n: Node3D, spot: String) -> Node3D:
 	var root := Node3D.new()
 	root.name = spot.capitalize()
-	root.transform = Layout.xform(spot)
+	root.set_meta("poi_spot", spot)
 	root.add_to_group("poi")
+	# сначала в дерево — иначе global_transform у сироты это (0,0,0)
+	# и snap_to_ground ставит площадку в начало координат.
 	n.add_child(root)
+	root.transform = Layout.xform(spot)
+	var s: Array = Layout.SPOTS[spot]
+	Layout.snap_to_ground(root, float(s[2]), float(s[3]))
+	if spot not in ["campfire", "forest"]:
+		var plinth := Art.color(Color(0.35, 0.32, 0.28), 0.95)
+		Build.block(root, Vector3(0, -0.55, 0), Vector3(float(s[2]) * 2.0 + 0.6, 1.1, float(s[3]) * 2.0 + 0.6), plinth, true)
 	return root
 
 
@@ -175,6 +183,7 @@ func _props(st: Node3D) -> void:
 	for a in angles:
 		var p := Layout.ring(a, 5.2)
 		var n := Node3D.new()
+		p.y = Terrain.height(p.x, p.z)
 		n.position = p
 		st.add_child(n)
 		Art.add_mesh(n, Art.cyl(0.08, 0.08, 7.0, 8), post, Vector3(0, 3.5, 0))
@@ -186,12 +195,14 @@ func _props(st: Node3D) -> void:
 	# стога у фермы, чуть в стороне
 	var hay_root := Node3D.new()
 	hay_root.position = Layout.ring(148.0, 24.0)
+	hay_root.position.y = Terrain.height(hay_root.position.x, hay_root.position.z)
 	st.add_child(hay_root)
 	_hay(hay_root, Vector3(0, 0, 0), 1.3)
 	_hay(hay_root, Vector3(2.4, 0, 1.1), 1.0)
 	# ещё один остов у кооператива со стороны дороги
 	var w := Node3D.new()
 	w.position = Layout.ring(118.0, 8.5)
+	w.position.y = Terrain.height(w.position.x, w.position.z)
 	w.rotation.y = Layout.face_in_yaw(118.0) + 0.6
 	st.add_child(w)
 	_car_wreck(w)
@@ -230,6 +241,7 @@ func _animals() -> void:
 		a.home = s[1]
 		a.radius = s[2]
 		a.tint = s[3]
+		a.home.y = Terrain.height(a.home.x, a.home.z)
 		a.position = a.home
 		a.name = String(s[0]).capitalize()
 		add_child(a)
@@ -245,6 +257,7 @@ func _pickables() -> void:
 		var p := _Pick.new()
 		p.item_id = &"mushroom" if i % 2 == 0 else &"berry"
 		p.position = Layout.local_to_world("forest", local)
+		p.position.y = Terrain.height(p.position.x, p.position.z)
 		p.name = "Pickable_%d" % i
 		add_child(p)
 
@@ -284,7 +297,9 @@ class _Wanderer extends Node3D:
 		var dir := _target - global_position
 		dir.y = 0
 		if dir.length() > 0.05:
-			global_position += dir.normalized() * 0.7 * delta
+			var nxt := global_position + dir.normalized() * 0.7 * delta
+			nxt.y = Terrain.height(nxt.x, nxt.z)
+			global_position = nxt
 			rotation.y = atan2(dir.x, dir.z)
 
 

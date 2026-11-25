@@ -21,6 +21,7 @@ const HAT_NAMES := ["Без шапки", "Кепка", "Шапка", "Ушанк
 const FACES := ["neutral", "smile", "player_b", "angry"]
 const FACE_NAMES := ["Обычное", "Весёлое", "Небритое", "Суровое"]
 const OUTFIT_NAMES := ["Обычный", "Друг из общаги"]
+const LINGERIE_COLORS := [Color(0.08, 0.07, 0.08), Color(0.48, 0.08, 0.14), Color(0.3, 0.14, 0.32)]
 
 @export var skin: Color = Color(0.93, 0.76, 0.62)
 @export var shirt: Color = Color(0.3, 0.45, 0.3)
@@ -31,6 +32,9 @@ const OUTFIT_NAMES := ["Обычный", "Друг из общаги"]
 @export var hair_color: Color = Color(0.3, 0.2, 0.12)
 @export var face_name: String = "neutral"
 @export var outfit: int = 0   ## 0 обычный, 1 открытая цветочная рубашка и тёмные трусы
+@export var female: bool = false
+@export var lingerie: int = 0   ## 0 нет, 1 чёрное, 2 бордо, 3 фиолетовое (бра и трусики, без наготы)
+@export var stockings: bool = false
 @export var fat: bool = false
 @export var height_scale: float = 1.0
 @export var stripes: bool = false        ## тельняшка
@@ -111,10 +115,14 @@ func _build() -> void:
 	var shoe_m := Art.color(shoes, 0.6)
 
 	hips = _pivot(self, Vector3(0, 0.9, 0))
-	var boxers := outfit == 1
-	Art.add_mesh(hips, Art.capsule(0.13, 0.4), Art.color(Color(0.07, 0.07, 0.08), 0.9) if boxers else pants_m, Vector3(0, 0.0, 0), Vector3(0, 0, PI / 2), Vector3(1, 1, 0.85))
+	var is_lingerie := female and lingerie > 0
+	var boxers := outfit == 1 and not is_lingerie
+	var ling_m := Art.color(LINGERIE_COLORS[clampi(lingerie - 1, 0, LINGERIE_COLORS.size() - 1)], 0.55)
+	var hip_scl := Vector3(1.2, 1.0, 0.95) if female else Vector3(1, 1, 0.85)
+	var hip_mat: Material = ling_m if is_lingerie else (Art.color(Color(0.07, 0.07, 0.08), 0.9) if boxers else pants_m)
+	Art.add_mesh(hips, Art.capsule(0.13, 0.4), hip_mat, Vector3(0, 0.0, 0), Vector3(0, 0, PI / 2), hip_scl)
 	# ремень с пряжкой (не для короткого белья)
-	if not boxers:
+	if not boxers and not is_lingerie:
 		var belt := Art.color(Color(0.14, 0.1, 0.08), 0.5)
 		Art.add_mesh(hips, Art.cyl(0.2, 0.2, 0.05, 14), belt, Vector3(0, 0.08, 0), Vector3.ZERO, Vector3(1.0, 1, 0.66))
 		Art.add_mesh(hips, Art.box(Vector3(0.06, 0.045, 0.02)), Art.color(Color(0.75, 0.7, 0.5), 0.3, 0.8), Vector3(0, 0.08, -0.135))
@@ -123,9 +131,26 @@ func _build() -> void:
 	var waist_m := Art.color(Color(0.92, 0.92, 0.93), 0.7)
 	if boxers:
 		Art.add_mesh(hips, Art.cyl(0.2, 0.2, 0.05, 12), waist_m, Vector3(0, 0.06, 0))
+	if is_lingerie:
+		Art.add_mesh(hips, Art.cyl(0.2, 0.2, 0.04, 12), ling_m, Vector3(0, 0.08, 0), Vector3.ZERO, Vector3(1.2 if female else 1.0, 1, 0.7))
 	for side in [-1, 1]:
-		var leg := _pivot(hips, Vector3(side * 0.1, -0.05, 0))
+		var leg := _pivot(hips, Vector3(side * (0.12 if female else 0.1), -0.05, 0))
 		var knee: Node3D
+		if is_lingerie:
+			Art.add_mesh(leg, Art.capsule(0.085, 0.2), ling_m, Vector3(0, -0.06, 0))
+			knee = _pivot(leg, Vector3(0, -0.42, 0))
+			var leg_m: Material = Art.color(Color(0.08, 0.06, 0.07), 0.35) if stockings else skin_m
+			Art.add_mesh(knee, Art.capsule(0.065, 0.44), leg_m, Vector3(0, -0.2, 0))
+			# туфелька на каблуке, без логотипов
+			Art.add_mesh(knee, Art.box(Vector3(0.1, 0.035, 0.2)), ling_m, Vector3(0, -0.43, -0.03))
+			Art.add_mesh(knee, Art.cyl(0.014, 0.014, 0.07, 6), ling_m, Vector3(0, -0.48, 0.07))
+			if side < 0:
+				leg_l = leg
+				knee_l = knee
+			else:
+				leg_r = leg
+				knee_r = knee
+			continue
 		if boxers:
 			Art.add_mesh(leg, Art.capsule(0.09, 0.28), shorts_m, Vector3(0, -0.1, 0))
 			knee = _pivot(leg, Vector3(0, -0.42, 0))
@@ -155,18 +180,27 @@ func _build() -> void:
 			knee_r = knee
 
 	spine = _pivot(hips, Vector3(0, 0.08, 0))
-	var floral := outfit == 1
+	var floral := outfit == 1 and not is_lingerie
 	var floral_m: Material = Art.floral(2.2) if floral else shirt_m
-	var torso_m: Material = skin_m if floral else shirt_m
-	if stripes and not floral:
+	var torso_m: Material = skin_m if (floral or is_lingerie) else shirt_m
+	if stripes and not floral and not is_lingerie:
 		torso_m = _striped(shirt)
 	if floral:
 		shirt_m = floral_m
-	Art.add_mesh(spine, Art.capsule(0.22, 0.64), torso_m, Vector3(0, 0.28, 0), Vector3.ZERO, Vector3(1.05, 1, 0.68))
+	var tw := 0.92 if female else 1.05
+	Art.add_mesh(spine, Art.capsule(0.2 if female else 0.22, 0.64), torso_m, Vector3(0, 0.28, 0), Vector3.ZERO, Vector3(tw, 1, 0.68))
 	# плечи — чтобы руки не «торчали» из коробки
+	var shw := 0.19 if female else 0.24
 	for sd in [-1.0, 1.0]:
-		Art.add_mesh(spine, Art.sphere(0.095, 10), skin_m if floral else torso_m, Vector3(sd * 0.24, 0.5, 0), Vector3.ZERO, Vector3(1, 0.85, 1))
-	if floral:
+		Art.add_mesh(spine, Art.sphere(0.085 if female else 0.095, 10), skin_m if (floral or is_lingerie) else torso_m, Vector3(sd * shw, 0.5, 0), Vector3.ZERO, Vector3(1, 0.85, 1))
+	if is_lingerie:
+		# бра: чашки и лямки — одежда, не анатомия
+		Art.add_mesh(spine, Art.cyl(0.16, 0.16, 0.045, 12), ling_m, Vector3(0, 0.36, -0.01), Vector3.ZERO, Vector3(1.1, 1, 0.7))
+		for sd in [-1.0, 1.0]:
+			var cup := Art.add_mesh(spine, Art.sphere(0.07, 10), ling_m, Vector3(sd * 0.075, 0.42, -0.12), Vector3.ZERO, Vector3(1.15, 0.85, 0.85))
+			cup.name = "Bra"
+			Art.add_mesh(spine, Art.box(Vector3(0.018, 0.22, 0.01)), ling_m, Vector3(sd * 0.13, 0.52, -0.02), Vector3(sd * -0.35, 0, 0))
+	elif floral:
 		# расстёгнутая короткая рубашка с цветочным принтом, грудь открыта
 		for sd in [-1.0, 1.0]:
 			var panel := Art.add_mesh(spine, Art.box(Vector3(0.16, 0.55, 0.04)), floral_m, Vector3(sd * 0.14, 0.3, -0.02), Vector3(0, sd * 0.55, sd * 0.15))
@@ -190,10 +224,11 @@ func _build() -> void:
 		Art.add_mesh(head, Art.sphere(0.045, 8), skin_m, Vector3(side * 0.195, 0.18, 0.0), Vector3.ZERO, Vector3(0.6, 1, 1))
 		Art.add_mesh(head, Art.sphere(0.02, 6), Art.color(skin.darkened(0.25), 0.6), Vector3(side * 0.205, 0.18, 0.0))   # ушная раковина
 	# нос — «картошкой», щёки и подбородок
-	Art.add_mesh(head, Art.sphere(0.042, 10), skin_m, Vector3(0, 0.16, -0.198), Vector3.ZERO, Vector3(0.9, 1.0, 1.0))
-	Art.add_mesh(head, Art.sphere(0.03, 8), Art.color(skin.lerp(Color(0.9, 0.4, 0.35), 0.25), 0.55), Vector3(0, 0.145, -0.215))
+	var nose_s := 0.032 if female else 0.042
+	Art.add_mesh(head, Art.sphere(nose_s, 10), skin_m, Vector3(0, 0.16, -0.198), Vector3.ZERO, Vector3(0.9, 1.0, 1.0))
+	Art.add_mesh(head, Art.sphere(0.024 if female else 0.03, 8), Art.color(skin.lerp(Color(0.9, 0.4, 0.35), 0.35 if female else 0.25), 0.55), Vector3(0, 0.145, -0.215))
 	Art.add_mesh(head, Art.sphere(0.12, 12), skin_m, Vector3(0, 0.07, -0.06), Vector3.ZERO, Vector3(1.1, 0.7, 1.0))
-	if hat != Hat.BALD:
+	if hat != Hat.BALD and not female:
 		# бакенбарды / виски из-под шапки
 		for side in [-1, 1]:
 			Art.add_mesh(head, Art.box(Vector3(0.03, 0.09, 0.07)), Art.color(hair_color, 0.9), Vector3(side * 0.19, 0.22, 0.02))
@@ -202,14 +237,16 @@ func _build() -> void:
 	_face = Art.add_mesh(head, quad, Art.face(face_name), Vector3(0, 0.19, -0.184), Vector3(0, PI, 0))
 	_face.rotation = Vector3(0, PI, 0)
 	_build_hat()
+	if female and hat != Hat.BALD:
+		_build_long_hair()
 
 	for side in [-1, 1]:
-		var arm := _pivot(spine, Vector3(side * 0.27, 0.5, 0))
-		var sleeve_m: Material = floral_m if floral else (shirt_m if not stripes else torso_m)
-		Art.add_mesh(arm, Art.capsule(0.07, 0.34), sleeve_m, Vector3(0, -0.14, 0))
+		var arm := _pivot(spine, Vector3(side * (0.22 if female else 0.27), 0.5, 0))
+		var sleeve_m: Material = skin_m if is_lingerie else (floral_m if floral else (shirt_m if not stripes else torso_m))
+		Art.add_mesh(arm, Art.capsule(0.065 if female else 0.07, 0.34), sleeve_m, Vector3(0, -0.14, 0))
 		var elbow := _pivot(arm, Vector3(0, -0.29, 0))
-		if floral:
-			Art.add_mesh(elbow, Art.capsule(0.06, 0.3), skin_m, Vector3(0, -0.12, 0))
+		if is_lingerie or floral:
+			Art.add_mesh(elbow, Art.capsule(0.055 if female else 0.06, 0.3), skin_m, Vector3(0, -0.12, 0))
 		else:
 			Art.add_mesh(elbow, Art.capsule(0.06, 0.3), shirt_m if not stripes else torso_m, Vector3(0, -0.12, 0))
 			Art.add_mesh(elbow, Art.cyl(0.065, 0.06, 0.05, 10), Art.color(shirt.darkened(0.2), 0.85), Vector3(0, -0.25, 0))   # манжет
@@ -227,6 +264,18 @@ func _build() -> void:
 	scale = Vector3.ONE * height_scale
 	_shown_flush = -1.0
 	_shown_dirty = false
+
+
+func _build_long_hair() -> void:
+	var hm := Art.color(hair_color, 0.9)
+	# объём сзади и длинные пряди — без усов и короткой мужской стрижки
+	Art.add_mesh(head, Art.sphere(0.21, 12), hm, Vector3(0, 0.24, 0.05), Vector3.ZERO, Vector3(1.12, 0.95, 1.15))
+	Art.add_mesh(head, Art.capsule(0.1, 0.5), hm, Vector3(0, -0.08, 0.14), Vector3(0.35, 0, 0))
+	for s in [-1.0, 1.0]:
+		Art.add_mesh(head, Art.capsule(0.045, 0.32), hm, Vector3(s * 0.17, 0.0, 0.04), Vector3(0.25, 0, s * 0.2))
+	# чёлка
+	Art.add_mesh(head, Art.box(Vector3(0.22, 0.07, 0.06)), hm, Vector3(0.0, 0.28, -0.16), Vector3(0.35, 0, 0))
+	Art.add_mesh(head, Art.box(Vector3(0.08, 0.09, 0.05)), hm, Vector3(-0.08, 0.24, -0.18), Vector3(0.5, 0.1, 0))
 
 
 func _build_hat() -> void:

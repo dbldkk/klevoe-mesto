@@ -18,6 +18,7 @@ func _ready() -> void:
 	var base := Layout.ring(phi, 8.2)
 	var t := Layout.tangent(phi)
 	global_position = base + t * 3.6
+	global_position.y = Terrain.height(global_position.x, global_position.z)
 	rotation.y = Layout.face_in_yaw(phi)
 	add_to_group("poi")
 	set_meta("poi_name", "Доска памяти")

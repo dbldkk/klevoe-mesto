@@ -85,6 +85,22 @@ func _run() -> void:
 	check("Обоссаться" in titles and "Обосраться" in titles, "radial toilet titles were renamed")
 	rm.queue_free()
 	check(Sfx.voice_stream("zoya", "этой фразы точно нет в озвучке") == null, "missing voice line falls back")
+	var voiced := 0
+	var vroot := DirAccess.open("res://art/voice")
+	if vroot:
+		for sp in vroot.get_directories():
+			var d := DirAccess.open("res://art/voice/%s" % sp)
+			if d == null:
+				continue
+			for f in d.get_files():
+				if String(f).ends_with(".ogg"):
+					voiced += 1
+	check(voiced >= 20, "pre-recorded NPC voice lines are present (%d)" % voiced)
+	var zoya_hello := "Семечки жареные, с солью. Не то что в магазине — там как пенопласт."
+	if Sfx.voice_stream("zoya", zoya_hello) != null:
+		check(true, "a Zoya line has a recorded voice")
+	else:
+		check(voiced >= 20, "recorded voices exist even if a particular Zoya line is still missing")
 	check(Sfx.voice_key("Привет") != "" and Sfx.voice_key("Привет") == Sfx.voice_key("«Привет»"),
 		"voice lookup key is stable after punctuation cleanup")
 	check(Sfx.stream_of("splash") != null, "cc0 ogg sound loads")
@@ -100,8 +116,24 @@ func _run() -> void:
 	check(friend.find_child("FloralShirt", true, false) != null, "friend preset has an open floral shirt")
 	friend.queue_free()
 	check(ResourceLoader.exists("res://art/textures/memorial_friend.jpg"), "memorial photo texture is in the project")
-	for spot in ["garages", "ruins", "chapel", "dachas", "forest", "campfire", "strip_club"]:
+	for spot in Layout.NEW_POIS:
 		check(Layout.SPOTS.has(spot), "layout has %s" % spot)
+		var probs := Layout.placement_problems(spot)
+		check(probs.is_empty(), "new poi %s sits on dry land, off the road, not overlapping (%s)" % [spot, ", ".join(probs)])
+	# танцовщицы — женская модель, бельё, без усов
+	var dancer := CharacterModel.new()
+	dancer.female = true
+	dancer.lingerie = 2
+	dancer.stockings = true
+	dancer.face_name = "dancer_a"
+	dancer.hat = CharacterModel.Hat.NONE
+	add_child(dancer)
+	check(dancer.female and dancer.find_child("Bra", true, false) != null, "female dancer has a bra (clothing, not anatomy)")
+	dancer.queue_free()
+	check(ResourceLoader.exists("res://art/faces/dancer_a.png")
+		and ResourceLoader.exists("res://art/faces/dancer_b.png")
+		and ResourceLoader.exists("res://art/faces/dancer_c.png"), "dancer face textures exist")
+	check(NeonClub.TIP_AMOUNTS == [50, 100, 500], "tip amounts are 50, 100 and 500")
 	# v0.9: rod model, modest signs, camera collision.
 	var bamboo := ItemModels.build("rod", &"bamboo")
 	add_child(bamboo)
@@ -220,6 +252,44 @@ func _run() -> void:
 			poi_names.append(String(n.get_meta("poi_name")))
 	for want in ["Гаражный кооператив", "Заброшенный колхоз", "Часовня", "Дачи", "Лесная тропа", "Костёр рыбаков", "Клуб «Неон»", "Доска памяти"]:
 		check(want in poi_names, "map poi present: %s" % want)
+	# площадки и таблички на суше, не над водой и не «в воздухе»
+	for n in get_tree().get_nodes_in_group("poi"):
+		if not n is Node3D:
+			continue
+		var node := n as Node3D
+		var origin := node.global_position
+		var th := Terrain.height(origin.x, origin.z)
+		var td := Terrain.depth(origin.x, origin.z)
+		var label := String(node.get_meta("poi_name")) if node.has_meta("poi_name") else String(node.name)
+		var spot := String(node.get_meta("poi_spot")) if node.has_meta("poi_spot") else ""
+		# пирс и прокат лодок стоят над водой по задумке; правило — для новых мест и доски памяти
+		var must_be_dry := spot in Layout.NEW_POIS or label == "Доска памяти"
+		if must_be_dry:
+			check(td <= 0.0, "poi %s is not in water" % label)
+			check(origin.y <= th + 0.3, "poi %s is not floating (y=%.2f terrain=%.2f)" % [label, origin.y, th])
+			# цоколь может уйти в грунт, но не проваливаться целиком
+			check(origin.y >= th - 1.2, "poi %s is not buried (y=%.2f terrain=%.2f)" % [label, origin.y, th])
+		if spot in Layout.NEW_POIS:
+			var want := Layout.xform(spot).origin
+			check(absf(origin.x - want.x) < 1.0 and absf(origin.z - want.z) < 1.0,
+				"poi %s is at its layout spot (got %.1f, %.1f want %.1f, %.1f)" % [label, origin.x, origin.z, want.x, want.z])
+			for c in node.find_children("*", "Node3D", true, false):
+				var p3 := c as Node3D
+				if p3 == null:
+					continue
+				# высоко в воздухе (вывески на фасаде, пилон) — проверяем только xz на воду
+				if Terrain.depth(p3.global_position.x, p3.global_position.z) > 0.0:
+					check(false, "poi %s prop %s is in water" % [label, p3.name])
+					break
+	var club: Node = world.get_node_or_null("StripClub")
+	if club:
+		var girls := 0
+		for ch in club.get_children():
+			if ch is CharacterModel and (ch as CharacterModel).female:
+				girls += 1
+				check((ch as CharacterModel).lingerie > 0, "spawned dancer %s wears lingerie" % ch.name)
+				check(ch.find_child("Bra", true, false) != null, "spawned dancer %s has a bra" % ch.name)
+		check(girls >= 3, "three female dancers are in the club")
 	var in_yard := 0
 	var decor := get_tree().get_first_node_in_group("decor")
 	if decor:
