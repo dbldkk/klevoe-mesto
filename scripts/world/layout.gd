@@ -11,10 +11,10 @@ const ROAD_W := 7.0
 ## Места: угол (градусы), отступ от оси дороги наружу (м), размер площадки (полуширина, полуглубина).
 const SPOTS := {
 	"house": [-105.0, 9.5, 8.5, 4.5],
-	"liquor": [-82.0, 9.0, 5.0, 4.0],
-	"casino": [25.0, 13.5, 11.0, 8.0],
-	"bus_stop": [-55.0, 6.2, 2.5, 1.5],
-	"shop": [-20.0, 12.0, 15.5, 7.0],
+	"liquor": [-68.0, 9.2, 5.0, 4.0],
+	"casino": [28.0, 13.5, 11.0, 8.0],
+	"bus_stop": [-46.0, 6.4, 2.5, 1.5],
+	"shop": [-22.0, 11.5, 15.5, 7.0],
 	"thimbles": [62.0, 6.0, 2.0, 2.0],
 	"garage": [88.0, 8.0, 2.6, 3.2],
 	"police": [-130.0, 9.5, 4.5, 4.0],
@@ -104,6 +104,15 @@ static func flat_factor(x: float, z: float, margin := 3.0) -> float:
 		var dd := maxf(absf(l.x) - s[1], absf(l.z) - s[2])
 		f = maxf(f, 1.0 - Terrain.smooth(0.0, margin, dd))
 	return f
+
+
+## Точка в площадке постройки (с запасом pad метров).
+static func spot_contains(spot: String, x: float, z: float, pad := 0.0) -> bool:
+	if not SPOTS.has(spot):
+		return false
+	var l: Vector3 = xform(spot).affine_inverse() * Vector3(x, 0.0, z)
+	var s: Array = SPOTS[spot]
+	return absf(l.x) < float(s[2]) + pad and absf(l.z) < float(s[3]) + pad
 
 
 ## Занято ли место (для деревьев, травы).
