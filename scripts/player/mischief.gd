@@ -213,13 +213,27 @@ func _tick_stunt(delta: float) -> void:
 		if _stunt_kind == "ragdoll":
 			player.global_position = NpcMotion.safe_point(_landing)
 			player.body.visible = true
-		player.third_person = _old_camera
-		player.model.rotation.z = 0
-		player._apply_camera_mode()
-		player.refresh_held()
-		player.velocity = Vector3.ZERO
-		player.input_cooldown = 0.3
-		_stunt_kind = ""
+		_finish_stunt()
+
+
+func cancel_stunt() -> void:
+	if stunt_left <= 0.0:
+		return
+	if is_instance_valid(_ragdoll):
+		_ragdoll.queue_free()
+	_finish_stunt()
+
+
+func _finish_stunt() -> void:
+	stunt_left = 0.0
+	player.third_person = _old_camera
+	player.model.rotation.z = 0
+	player._apply_camera_mode()
+	player.refresh_held()
+	player.velocity = Vector3.ZERO
+	player.input_cooldown = 0.3
+	_stunt_kind = ""
+
 
 func offer_fish(entry: Dictionary) -> void:
 	entry["talking"] = true

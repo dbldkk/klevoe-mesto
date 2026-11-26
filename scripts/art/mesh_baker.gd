@@ -36,6 +36,7 @@ static func bake(root: Node3D) -> int:
 		mi.mesh = mesh
 		mi.material_override = g.mat
 		mi.cast_shadow = g.shadow
+		mi.visibility_range_end = g.detail_range
 		root.add_child(mi)
 		made += 1
 	for v in victims:
@@ -50,8 +51,9 @@ static func bake(root: Node3D) -> int:
 	return victims.size()
 
 
-static func _collect(root: Node3D, n: Node, groups: Dictionary, victims: Array[MeshInstance3D]) -> void:
+static func _collect(root: Node3D, n: Node, groups: Dictionary, victims: Array[MeshInstance3D], inherited_range := 0.0) -> void:
 	for c in n.get_children():
+		var detail_range := float(c.get_meta("bake_detail_range", inherited_range))
 		if c.has_meta("no_bake") or c is CharacterModel or c is Label3D:
 			continue
 		if c != root and c.get_script() != null and not (c is MeshInstance3D) and not c.has_meta("bake_ok"):
@@ -69,13 +71,13 @@ static func _collect(root: Node3D, n: Node, groups: Dictionary, victims: Array[M
 					mat = null
 				if mat != null:
 					var p := mi.global_position
-					var key := "%d:%d:%d:%d" % [mat.get_instance_id(), int(mi.cast_shadow), floori(p.x / CHUNK), floori(p.z / CHUNK)]
+					var key := "%d:%d:%d:%d:%s" % [mat.get_instance_id(), int(mi.cast_shadow), floori(p.x / CHUNK), floori(p.z / CHUNK), detail_range]
 					if not groups.has(key):
-						groups[key] = {"mat": mat, "shadow": mi.cast_shadow, "list": []}
+						groups[key] = {"mat": mat, "shadow": mi.cast_shadow, "detail_range": detail_range, "list": []}
 					groups[key].list.append([mi.mesh, mi.global_transform])
 					victims.append(mi)
 					continue
-		_collect(root, c, groups, victims)
+		_collect(root, c, groups, victims, detail_range)
 
 
 static func _only_bodies(mi: Node) -> bool:

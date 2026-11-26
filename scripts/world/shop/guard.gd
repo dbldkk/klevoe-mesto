@@ -64,6 +64,9 @@ func _ready() -> void:
 	_rng.randomize()
 	_post = position
 	_post_rot = rotation.y
+	_prev_pos = global_position
+	label.no_depth_test = false
+	label.visibility_range_end = 25.0
 
 
 # ------------------------------------------------------------ для игроков (E / G)
@@ -231,6 +234,8 @@ func on_bottle_hit(by: int) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not Net.is_online():
+		return
 	_t += delta
 	_update_visual()
 	if not multiplayer.is_server():
@@ -324,6 +329,7 @@ func _physics_process(delta: float) -> void:
 			# Застрял по дороге — просто возвращается на пост.
 			if _return_time > 25.0:
 				global_position = post
+				reset_physics_interpolation()
 			if global_position.distance_to(post) < 0.4:
 				_return_time = 0.0
 				state = State.SUSPICIOUS
@@ -487,7 +493,7 @@ func _face(point: Vector3, weight: float) -> void:
 func _update_visual() -> void:
 	visual.speed = Vector2(velocity.x, velocity.z).length() if multiplayer.is_server() else _remote_speed()
 	visual.pose = "idle"
-	visual.set_face("guard")
+	visual.set_face("guard_sleep" if state in [State.DOZE, State.KO] else "guard")
 	match state:
 		State.WATCH:
 			label.text = "*бдит*"
@@ -498,7 +504,6 @@ func _update_visual() -> void:
 			visual.set_head_tilt(0.0)
 		State.DOZE:
 			label.text = "Zzz…"
-			visual.set_face("guard_sleep")
 			visual.set_head_tilt(0.5, 0.35)
 		State.DISTRACTED:
 			label.text = "*болтает с %s*" % talker
@@ -518,7 +523,6 @@ func _update_visual() -> void:
 		State.KO:
 			label.text = "*в отключке*"
 			visual.pose = "ko"
-			visual.set_face("guard_sleep")
 	if state == State.CHASE:
 		if _chase_reason == 2:
 			label.text = "Ну держись!!!"

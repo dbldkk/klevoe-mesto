@@ -150,6 +150,9 @@ func _register(peer: int, pid: String, pname: String) -> void:
 	var saved = data.get("pos")
 	if saved is Array and saved.size() == 3 and float(saved[1]) > -5.0:
 		pos = Vector3(saved[0], float(saved[1]) + 0.3, saved[2])
+	var station := get_tree().get_first_node_in_group("police_station")
+	if station and station.is_in_cell(pos):
+		pos = station.exit_point()
 	data["_spawn"] = [pos.x, pos.y, pos.z, float(data.get("rot", Layout.spawn_yaw()))]
 	if peer == multiplayer.get_unique_id():
 		_apply_player(data)
@@ -205,10 +208,7 @@ func send_snapshot() -> void:
 	var data := {"name": player_name, "inventory": Inventory.to_dict()}
 	var p := get_tree().get_first_node_in_group("local_player") as Node3D
 	if p:
-		var save_pos: Vector3 = p.global_position
-		var m := p.get_node_or_null("Mischief")
-		if m and m.stunt_left > 0:
-			save_pos = m._landing
+		var save_pos: Vector3 = p.position_for_save()
 		data["pos"] = [save_pos.x, save_pos.y, save_pos.z]
 		data["rot"] = p.rotation.y
 	if multiplayer.is_server():

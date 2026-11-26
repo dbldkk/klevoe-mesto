@@ -39,6 +39,7 @@ static func move(body: CharacterBody3D, delta: float) -> void:
 		var submerged := at.is_finite() and Terrain.depth(at.x, at.z) > 0.1 and at.y < Terrain.WATER_Y + 0.1
 		if not at.is_finite() or below or submerged or absf(at.x) > 112.0 or at.z < -217.0 or at.z > 102.0:
 			body.global_position = data.safe
+			body.reset_physics_interpolation()
 			body.velocity = Vector3.ZERO
 		elif body.is_on_floor() and supported(body, at):
 			data.safe = at + Vector3.UP * 0.08

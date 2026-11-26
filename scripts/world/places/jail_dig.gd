@@ -3,7 +3,6 @@ extends Interactable
 
 var _prog := 0.0
 var _stroke := 1.35
-var _bar: MeshInstance3D
 var _label: Label3D
 var _dirt: Node3D
 var _dug := 0
@@ -45,7 +44,7 @@ func _process(delta: float) -> void:
 		_prog = 0.0
 		_label.text = "Ложка под нарами"
 		return
-	if not Input.is_action_pressed("interact"):
+	if Events.ui_open or not Input.is_action_pressed("interact") or p.global_position.distance_to(global_position) > 2.0:
 		p.stop_jail_dig()
 		_prog = 0.0
 		return
@@ -61,8 +60,9 @@ func _process(delta: float) -> void:
 	if _prog >= _stroke:
 		_prog = 0.0
 		p.apply_dig_stroke()
-		_dug += 1
-		_rebuild_dirt()
+		if _dug < 5:
+			_dug += 1
+			_rebuild_dirt()
 		_label.text = "Земля поддалась"
 		Sfx.play("click", global_position, -8.0)
 

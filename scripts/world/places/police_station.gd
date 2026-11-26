@@ -5,10 +5,12 @@ extends Node3D
 const W := 7.0
 const D := 6.0
 const H := 3.0
-const CELL := Vector3(-2.3, 0.1, -1.9)
+const CELL := Vector3(-2.2, 0.1, -1.34)
 const OUT := Vector3(1.5, 0.1, 4.6)
 const JAIL_COOP := 120.0
 const JAIL_SOLO := 45.0
+
+var _recent_arrests: Dictionary = {}
 
 
 func _enter_tree() -> void:
@@ -56,7 +58,7 @@ func _ready() -> void:
 	Build.text(self, Vector3(-2.2, 2.2, zb + 0.03), "КПЗ", 50, Color(0.9, 0.2, 0.2), 0.006)
 	var dig := preload("res://scripts/world/places/jail_dig.gd").new()
 	dig.name = "JailDig"
-	dig.position = Vector3(-2.4, 0.0, -2.15)
+	dig.position = Vector3(-2.4, 0.0, -1.99)
 	add_child(dig)
 	# миска и ложка у нар
 	Art.add_mesh(self, Art.cyl(0.08, 0.09, 0.04, 10), Art.color(Color(0.55, 0.55, 0.5), 0.4, 0.5), Vector3(-1.7, 0.36, -2.35))
@@ -73,10 +75,11 @@ func _invisible() -> StandardMaterial3D:
 ## Сервер: посадить игрока.
 func jail(peer: int, reason: String, mult := 1.0) -> void:
 	var p := get_tree().get_root().get_node_or_null("World/Players/%d" % peer)
-	if p == null:
+	if p == null or recently_arrested(peer):
 		return
 	var solo := get_tree().get_nodes_in_group("players").size() <= 1
 	var secs := (JAIL_SOLO if solo else JAIL_COOP) * mult
+	_recent_arrests[peer] = Time.get_ticks_msec() + int(maxf(secs, 90.0) * 1000.0)
 	# Сдвиг времени суток — при выходе, и его можно укоротить, копая ложкой.
 	NetUtil.call_peer(p, peer, "go_to_jail", [secs, to_global(CELL), to_global(OUT), reason, solo])
 	NetUtil.call_all(self, "announce", ["Участковый посадил %s «на сутки»: %s" % [p.player_name, reason]])
@@ -84,7 +87,20 @@ func jail(peer: int, reason: String, mult := 1.0) -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func announce(text: String) -> void:
-	Events.notify(text, Color(0.6, 0.75, 1.0))
+	Events.notify(text, Color(0.6, 0.75, 1.0), false)
+
+
+func recently_arrested(peer: int) -> bool:
+	return int(_recent_arrests.get(peer, 0)) > Time.get_ticks_msec()
+
+
+func is_in_cell(point: Vector3) -> bool:
+	var local := to_local(point)
+	return local.x > -3.5 and local.x < -0.9 and local.z > -3.0 and local.z < -0.6 and local.y > -0.5 and local.y < 3.0
+
+
+func exit_point() -> Vector3:
+	return to_global(OUT)
 
 
 func cell_is_watched() -> bool:

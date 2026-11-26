@@ -100,6 +100,7 @@ func _process(_delta: float) -> void:
 			check(get_tree().get_first_node_in_group("village_mayhem").patches.size()==1,"late client receives active water pollution")
 			client_stage = -1
 			await _test_shop_security(p)
+			await _test_remote_jail(p)
 			Inventory.money = 1234
 			Inventory.blindness = 1.0
 			Net.send_snapshot()
@@ -156,3 +157,26 @@ func _test_shop_security(p: Node3D) -> void:
 		await get_tree().create_timer(0.8).timeout
 		check(Inventory.cart.is_empty() and Inventory.money==1700,"server sentry intercepts second thief while partner pursues first in "+key)
 		check(store.guard.state==Guard.State.CHASE and store.is_inside(store.sentry.global_position),"both guard roles preserved on client in "+key)
+
+
+func _test_remote_jail(p: Node3D) -> void:
+	request_test_arrest.rpc_id(1)
+	var deadline := Time.get_ticks_msec() + 4000
+	while not p.is_jailed() and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	var station := get_tree().get_first_node_in_group("police_station")
+	check(p.is_jailed() and station.is_in_cell(p.global_position), "host arrest reaches the remote player")
+	check(p.position_for_save().distance_to(station.exit_point()) < 0.01, "co-op arrest saves the station exit")
+	if p.is_jailed():
+		p._jail_t = 0.3
+		await get_tree().create_timer(0.5).timeout
+	check(not p.is_jailed() and p.global_position.distance_to(station.exit_point()) < 0.5,
+		"remote player leaves the cell at the end of the timer")
+
+
+@rpc("any_peer", "reliable")
+func request_test_arrest() -> void:
+	if not multiplayer.is_server():
+		return
+	var station := get_tree().get_first_node_in_group("police_station")
+	station.jail(multiplayer.get_remote_sender_id(), "проверка КПЗ в кооперативе")

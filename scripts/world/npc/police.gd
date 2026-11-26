@@ -66,7 +66,7 @@ func _ready() -> void:
 	_build_route()
 	if multiplayer.is_server():
 		if duty:
-			global_position = Layout.local_to_world("police", Vector3(2.0, 0.1, -1.8))
+			global_position = Layout.local_to_world("police", Vector3(2.0, 0.1, -2.36))
 			global_rotation.y = Layout.face_in_yaw(Layout.SPOTS.police[0]) + PI
 		elif not _wp.is_empty():
 			global_position = _wp[0] + Vector3.UP * 0.5
@@ -178,10 +178,17 @@ func witness(peer: int, reason: String, where: Vector3) -> void:
 
 
 func on_melee_hit(by: int, _damage: float) -> void:
-	if multiplayer.is_server():
-		_say("Ах ты так?! Нападение на сотрудника!")
-		_wanted[by] = ["нападение на участкового", Time.get_ticks_msec() / 1000.0 + WANTED_TIME, true]
-		_start_chase(by, "нападение на участкового")
+	if not multiplayer.is_server():
+		return
+	const ASSAULT := "нападение на участкового"
+	_say("Ах ты так?! Нападение на сотрудника!")
+	if duty:
+		for officer in get_tree().get_nodes_in_group("police"):
+			if not officer.duty:
+				officer.report(by, ASSAULT)
+		return
+	report(by, ASSAULT)
+	_start_chase(by, ASSAULT)
 
 
 # ------------------------------------------------------------ поведение (сервер)
@@ -298,12 +305,12 @@ func _look_around() -> void:
 	for k in _wanted.keys():
 		if float(_wanted[k][1]) < now:
 			_wanted.erase(k)
-	if state != S.PATROL:
+	if duty or state != S.PATROL:
 		return
 	for p in get_tree().get_nodes_in_group("players"):
 		var pp := p as Node3D
 		var peer: int = p.name.to_int()
-		if p.hidden or p.sleeping or float(_cooldown.get(peer, 0.0)) > now:
+		if p.hidden or p.sleeping or float(_cooldown.get(peer, 0.0)) > now or _other_officer_handling(peer):
 			continue
 		var d := pp.global_position.distance_to(global_position)
 		# Пьяный за рулём — видно издалека.
@@ -322,7 +329,19 @@ func _look_around() -> void:
 			return
 
 
+func _other_officer_handling(peer: int) -> bool:
+	var st := get_tree().get_first_node_in_group("police_station")
+	if st and st.recently_arrested(peer):
+		return true
+	for officer in get_tree().get_nodes_in_group("police"):
+		if officer != self and officer._target == peer and officer.state in [S.CHASE, S.ESCORT]:
+			return true
+	return false
+
+
 func _start_chase(peer: int, reason: String) -> void:
+	if state == S.ESCORT or _other_officer_handling(peer):
+		return
 	state = S.CHASE
 	_target = peer
 	_reason = reason
@@ -337,6 +356,9 @@ func _start_chase(peer: int, reason: String) -> void:
 ## Поймал: сначала «беседа» — можно попробовать договориться (BribeUI у игрока).
 func _arrest(t: Node3D) -> void:
 	var peer: int = t.name.to_int()
+	if _other_officer_handling(peer):
+		_give_up("")
+		return
 	_target = peer
 	state = S.ESCORT
 	_bribe_t = BRIBE_TIME
@@ -419,7 +441,8 @@ func bribe_result(ok: bool, kind: String, value: int, data: Dictionary) -> void:
 
 
 func _give_up(line: String) -> void:
-	_say(line)
+	if not line.is_empty():
+		_say(line)
 	_cooldown[_target] = Time.get_ticks_msec() / 1000.0 + 20.0
 	state = S.PATROL
 	target_name = ""

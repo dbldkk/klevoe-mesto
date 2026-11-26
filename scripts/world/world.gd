@@ -28,6 +28,14 @@ func _ready() -> void:
 	var goose := AngryGoose.new()
 	goose.name = "Goose"
 	add_child(goose)
+	# Tick-based movement is interpolated for NPCs. The player camera and vehicle
+	# already interpolate independently, so keep their scene branches unchanged.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	get_tree().physics_interpolation = true
+	for npc in get_tree().get_nodes_in_group("npc"):
+		if npc is CharacterBody3D:
+			npc.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
+			npc.reset_physics_interpolation()
 	spawner.add_spawnable_scene(PLAYER_SCENE_PATH)
 	Net.player_registered.connect(_on_player_registered)
 	Net.server_lost.connect(_on_server_lost)

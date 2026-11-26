@@ -16,6 +16,7 @@ extends Interactable
 
 func _ready() -> void:
 	var length := spacing * facings
+	set_meta("bake_detail_range", 20.0)
 	set_meta("bake_ok", true)   # товары на полке не двигаются — MeshBaker склеит
 	for i in facings:
 		var m := ItemModels.build(kind, item_id)
@@ -72,6 +73,7 @@ func _label(txt: String, pos: Vector3, size: int, width: float) -> void:
 	l.modulate = Color(0.1, 0.08, 0.06)
 	l.position = pos
 	l.double_sided = false
+	l.visibility_range_end = 9.0
 	l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	# Не вылезать за ценник: ужимаем шрифт, если строка длинная.
 	var max_chars := int(width / (size * 0.62 * l.pixel_size))

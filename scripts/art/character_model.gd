@@ -83,6 +83,8 @@ var _anim_accum := 0.0
 var _anim_interval := 0.0
 var _far_proxy: Node3D
 var _far := false
+var _shadow_meshes: Array[MeshInstance3D] = []
+var _detail_casts_shadows := true
 
 
 func _ready() -> void:
@@ -321,6 +323,8 @@ func _build_hat() -> void:
 ## Оптимизация: мелкие детали (пуговицы, пряжка, уши, пальцы) не рисуем издалека и без теней;
 ## всего человека — не дальше 90 м.
 func _apply_lod() -> void:
+	_shadow_meshes.clear()
+	_detail_casts_shadows = true
 	for n in find_children("*", "MeshInstance3D", true, false):
 		var mi := n as MeshInstance3D
 		if mi.mesh == null:
@@ -332,6 +336,8 @@ func _apply_lod() -> void:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		else:
 			mi.visibility_range_end = 90.0
+		if mi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
+			_shadow_meshes.append(mi)
 
 
 func _striped(base: Color) -> StandardMaterial3D:
@@ -473,10 +479,21 @@ func _update_materials() -> void:
 		_pants_mat.albedo_color = pants.lerp(Color(0.35, 0.25, 0.08), 0.55) if stinky else pants
 
 
+func _update_detail_shadows(dist: float) -> void:
+	var casts := dist < (14.0 if _detail_casts_shadows else 12.0)
+	if casts == _detail_casts_shadows:
+		return
+	_detail_casts_shadows = casts
+	for mi in _shadow_meshes:
+		if is_instance_valid(mi):
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if casts else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
 func _update_lod() -> void:
 	var cam := get_viewport().get_camera_3d()
 	var dist := cam.global_position.distance_to(global_position) if cam else 0.0
-	_far = dist > 30.0
+	_far = dist > (28.0 if _far else 32.0)
+	_update_detail_shadows(dist)
 	_anim_interval = 1.0 / 30.0 if dist > 16.0 else 0.0
 	if _far and not is_instance_valid(_far_proxy):
 		_far_proxy = Node3D.new()
@@ -499,7 +516,7 @@ func _process(delta: float) -> void:
 	_lod_t -= delta
 	_anim_accum += delta
 	if _lod_t <= 0.0:
-		_lod_t = 0.25
+		_lod_t = 0.22 + float(get_instance_id() % 17) * 0.004
 		_update_lod()
 	if _far or _anim_accum < _anim_interval:
 		return

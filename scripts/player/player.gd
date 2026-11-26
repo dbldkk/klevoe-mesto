@@ -667,8 +667,19 @@ func police_warning(reason: String) -> void:
 ## Посадили «на сутки».
 @rpc("any_peer", "reliable")
 func go_to_jail(secs: float, cell: Vector3, out: Vector3, reason: String, solo: bool) -> void:
-	if not is_multiplayer_authority() or multiplayer.get_remote_sender_id() not in [0, 1]:
+	if not is_multiplayer_authority() or multiplayer.get_remote_sender_id() not in [0, 1] or is_jailed():
 		return
+	var bribe_ui := get_tree().get_first_node_in_group("bribe_ui")
+	if bribe_ui:
+		bribe_ui.close()
+	var mischief := get_node_or_null("Mischief")
+	if mischief:
+		mischief.cancel_stunt()
+	if sleeping:
+		_leave_bed()
+	_knocked_out = false
+	_action = ""
+	swimming = false
 	if vehicle:
 		vehicle.request_exit()
 		exit_vehicle(false)
@@ -677,21 +688,30 @@ func go_to_jail(secs: float, cell: Vector3, out: Vector3, reason: String, solo: 
 	if carrying:
 		drop_box("")
 	fishing.cancel()
-	Inventory.drop_cart()
+	if Inventory.theft == Inventory.Theft.NONE:
+		Inventory.drop_cart()
+	else:
+		Inventory.confiscate_cart(0)
 	var fine := roundi(Inventory.money * 0.15)
 	Inventory.money -= fine
 	Inventory.drunk = 0.0
 	Inventory.stat_add("jailed")
 	Inventory.changed.emit()
 	global_position = cell
+	_pp_prev = cell
 	velocity = Vector3.ZERO
+	var dig := get_tree().get_first_node_in_group("jail_dig") as Node3D
+	if dig:
+		var to_spoon := dig.global_position - cell
+		rotation.y = atan2(-to_spoon.x, -to_spoon.z)
+		head_pitch = atan2(0.55 - _head_base_y, Vector2(to_spoon.x, to_spoon.z).length())
 	_jail_t = secs
 	_jail_out = out
 	_jail_solo = solo
 	_jail_skip = 8.0 if solo else 0.0
 	_digging = false
 	Events.blackout.emit("«На сутки»: %s. Штраф %d ₽" % [reason, fine])
-	Events.notify("Сидишь в КПЗ (%d с). Под нарами — ложка: копай, когда дежурная не смотрит." % int(secs), Color(0.6, 0.75, 1.0))
+	Events.notify("Сидишь в КПЗ (%d с). Под нарами — ложка: копай, когда дежурная не смотрит." % int(secs), Color(0.6, 0.75, 1.0), false)
 
 
 func _tick_jail(delta: float) -> void:
@@ -706,6 +726,7 @@ func _release_from_jail() -> void:
 	_jail_t = 0.0
 	_digging = false
 	global_position = _jail_out
+	_pp_prev = _jail_out
 	velocity = Vector3.ZERO
 	if _jail_solo and _jail_skip > 0.05:
 		var dc := get_tree().get_first_node_in_group("day_cycle") as DayCycle
@@ -715,6 +736,13 @@ func _release_from_jail() -> void:
 	else:
 		Events.notify("Отпустили. Смотри не попадайся снова.", Color(0.6, 0.75, 1.0))
 	_jail_skip = 0.0
+
+
+func position_for_save() -> Vector3:
+	if is_jailed():
+		return _jail_out
+	var mischief := get_node_or_null("Mischief")
+	return mischief._landing if mischief and mischief.stunt_left > 0 else global_position
 
 
 func jail_left() -> float:
@@ -1157,7 +1185,7 @@ func take_hit(amount: float, from_name: String) -> void:
 
 
 func knock_out(text: String) -> void:
-	if _knocked_out:
+	if _knocked_out or is_jailed():
 		return
 	if hidden:
 		exit_hide()
@@ -1172,6 +1200,8 @@ func knock_out(text: String) -> void:
 	fishing.cancel()
 	Events.blackout.emit(text)
 	await get_tree().create_timer(1.6).timeout
+	if not _knocked_out or is_jailed():
+		return
 	global_position = Layout.spawn() + Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1, 1))
 	velocity = Vector3.ZERO
 	Inventory.drunk = minf(Inventory.drunk, 40.0)
@@ -1184,6 +1214,8 @@ func knock_out(text: String) -> void:
 	Inventory.drop_cart()
 	Inventory.changed.emit()
 	await get_tree().create_timer(1.6).timeout
+	if not _knocked_out or is_jailed():
+		return
 	_knocked_out = false
 	if lost > 0:
 		Events.notify("Очнулся у дома. Карманы кто-то обчистил: −%d ₽" % lost, Color.TOMATO)
@@ -1500,7 +1532,9 @@ func _process(delta: float) -> void:
 	# В транспорте садимся по сглаженному положению каждый кадр отрисовки (а не только в физике) — без дёрганья.
 	if vehicle and is_multiplayer_authority():
 		_follow_vehicle()
-	_smooth_camera()
+	if is_multiplayer_authority():
+		head.position -= _head_off
+		_head_off = Vector3.ZERO
 	_t += delta
 	name_label.text = player_name
 	# Внешний вид — у всех, кто видит этого игрока.
@@ -1590,7 +1624,7 @@ func _process(delta: float) -> void:
 	tp_camera.fov = Settings.fov
 	if not sleeping:
 		var hy := 0.95 if _action == "poop" else _head_base_y
-		head.position.y = lerpf(head.position.y, hy, delta * 6.0)
+		head.position.y = lerpf(head.position.y, hy, 1.0 - exp(-delta * 6.0))
 		if _action == "poop":
 			head.position.x = sin(_t * 30.0) * 0.008
 	if fishing.is_busy():
@@ -1600,6 +1634,7 @@ func _process(delta: float) -> void:
 	elif _action != "swing" and _action != "punch":
 		fp_hand.rotation = fp_hand.rotation.lerp(Vector3.ZERO, minf(delta * 10.0, 1.0))
 	fp_hand.position.y = lerpf(fp_hand.position.y, -0.5 if swimming else -0.32, delta * 8.0)
+	_smooth_camera()
 	_update_focus()
 
 
@@ -1916,7 +1951,6 @@ func _tick_needs(delta: float) -> void:
 func _smooth_camera() -> void:
 	if not is_multiplayer_authority():
 		return
-	head.position -= _head_off
 	var off := Vector3.ZERO
 	if not vehicle and not sleeping and _pp_prev.distance_to(global_position) < 2.0:
 		var f := Engine.get_physics_interpolation_fraction()
