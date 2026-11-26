@@ -72,6 +72,7 @@ func set_bus_volume(bus: String, v: float) -> void:
 var _tts_male := ""
 var _tts_female := ""
 var _tts_checked := false
+var _system_voice_active := false
 const SAY_DIST := 22.0
 
 
@@ -200,6 +201,7 @@ func say(pos: Vector3, voice: String, text: String, speaker := "", preview := fa
 			pitch -= 0.4    # голос только женский — опустим
 		var vol := Settings.vol.get("Voices", 0.9) as float
 		vol *= Saves.volume * (1.0 - clampf(dist / SAY_DIST, 0.0, 1.0) * 0.6)
+		_system_voice_active = true
 		DisplayServer.tts_speak(clean, id, clampi(int(vol * 100.0), 0, 100), clampf(pitch, 0.3, 2.0), 1.05 if voice != "old" else 0.95, 0, true)
 		return
 	babble(pos, voice, text.length())
@@ -260,7 +262,8 @@ func menus_block_voice() -> bool:
 
 func stop_voices() -> void:
 	_voice_epoch += 1
-	if DisplayServer.get_name() != "headless":
+	if _system_voice_active:
+		_system_voice_active = false
 		DisplayServer.tts_stop()
 	for p in get_tree().get_nodes_in_group("npc_voice"):
 		p.stop()

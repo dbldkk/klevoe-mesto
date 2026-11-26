@@ -62,6 +62,7 @@ func host(port: int = DEFAULT_PORT) -> Error:
 	_autosave_timer = AUTOSAVE_INTERVAL
 	hosted.emit()
 	_register(1, Saves.profile_id, player_name)
+	print("SESSION: world started, renderer=", RenderingServer.get_current_rendering_method())
 	return OK
 
 
@@ -99,6 +100,7 @@ func exit_to_menu() -> void:
 	Saves.close_world()
 	Events.ui_open = false
 	_exiting = false
+	print("SESSION: saved and returned to main menu")
 	get_tree().reload_current_scene()
 
 
@@ -114,6 +116,10 @@ func quit_game() -> void:
 				return
 		else:
 			await get_tree().create_timer(0.3).timeout
+	leave()
+	Saves.close_world()
+	await get_tree().process_frame
+	print("SESSION: clean shutdown requested")
 	get_tree().quit()
 
 

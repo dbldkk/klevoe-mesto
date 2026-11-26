@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Клёвое место"
-config/version="1.3.2"
+config/version="1.3.3"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="Game fish"
 run/main_scene="res://scenes/world.tscn"
@@ -56,4 +56,5 @@ window/stretch/aspect="expand"
 
 [rendering]
 
+renderer/rendering_method.windows="gl_compatibility"
 rendering_device/driver.windows="vulkan"
