@@ -447,25 +447,35 @@ func remove_fish(index: int) -> Dictionary:
 
 # ------------------------------------------------------------ корзина магазина
 
-func add_to_cart(kind: String, id: StringName) -> bool:
+func add_to_cart(kind: String, id: StringName, price: int = -1, shop_id: String = "") -> bool:
 	if not _valid_item(kind, id):
 		return false
 	if theft != Theft.NONE:
 		Events.notify("Сначала разберись с охранником!", Color.TOMATO)
 		return false
+	if not cart_matches(shop_id):
+		Events.notify("Сначала оплати или выложи корзину другого магазина", Color.TOMATO)
+		return false
 	if cart.size() >= MAX_CART:
 		Events.notify("Корзина полная", Color.TOMATO)
 		return false
-	cart.append({"kind": kind, "id": id})
+	cart.append({"kind": kind, "id": id, "price": GameData.item_price(kind, id) if price < 0 else price, "shop": shop_id})
 	Events.notify("В корзину: %s" % GameData.item_name(kind, id), Color(0.85, 0.95, 0.85))
 	changed.emit()
+	return true
+
+
+func cart_matches(shop_id: String) -> bool:
+	for c in cart:
+		if str(c.get("shop", "")) != shop_id:
+			return false
 	return true
 
 
 func cart_total() -> int:
 	var t := 0
 	for c in cart:
-		t += GameData.item_price(c.kind, c.id)
+		t += int(c.get("price", GameData.item_price(c.kind, c.id)))
 	return t
 
 

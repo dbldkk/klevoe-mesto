@@ -38,7 +38,7 @@ func _ready() -> void:
 
 
 ## Оптимизация: склеиваем неподвижные кусочки построек, деревьев и улицы (см. MeshBaker).
-const BAKE := ["Decor", "Street", "Shop", "Casino", "LiquorStore", "House", "Club", "Farm", "PoliceStation",
+const BAKE := ["Decor", "Street", "Shop", "ShopPremium", "Casino", "LiquorStore", "House", "Club", "Farm", "PoliceStation",
 	"Market", "Garage", "BusStop", "RepairJob", "Babka", "InspectorPost", "Pier", "Thimbles",
 	"VillageLife/Static", "StripClub/Static", "Clinic/Static"]
 

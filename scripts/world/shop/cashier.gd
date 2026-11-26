@@ -13,6 +13,8 @@ const LINES := [
 func get_prompt(_player: Node) -> String:
 	if get_parent().is_closed():
 		return "Зина в панике звонит в полицию"
+	if not Inventory.cart.is_empty() and not Inventory.cart_matches(get_parent().spot_key):
+		return "Это корзина другого магазина"
 	if Inventory.cart.is_empty():
 		return "Поболтать с кассиршей Зиной"
 	return "Оплатить корзину: %d ₽" % Inventory.cart_total()
@@ -35,6 +37,9 @@ func interact(player: Node) -> void:
 		return
 	if Inventory.theft != Inventory.Theft.NONE:
 		Events.notify("Зина: «Вон отсюда, ворюга!»", Color.TOMATO)
+		return
+	if not Inventory.cart_matches(get_parent().spot_key):
+		Events.notify("Эту корзину нужно оплатить в другом магазине", Color.TOMATO)
 		return
 	var total := Inventory.cart_total()
 	if Inventory.pay_cart():

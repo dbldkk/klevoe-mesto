@@ -7,7 +7,7 @@ extends CharacterBody3D
 ## Если заметит вора на выходе — погонится. Догонит — штраф и всё отберёт.
 ## Чем дороже украденное — тем быстрее и дольше бежит.
 ## Вор может спрятаться (кусты, мусорка, туалет): если Михалыч не видел, куда — поищет и уйдёт.
-## Ударишь — полезет в драку. Вырубишь — «Шестёрочка» закрыта, пока он не очухается.
+## Дежурный остаётся внутри даже при драке. Магазин закрыт, если оба в нокауте.
 
 enum State { WATCH, PHONE, DOZE, DISTRACTED, SUSPICIOUS, CHASE, RETURN, SEARCH, KO }
 
@@ -26,6 +26,9 @@ const SPOT_CHANCE := {
 	State.WATCH: 0.75, State.PHONE: 0.3, State.DOZE: 0.08, State.DISTRACTED: 0.05,
 	State.SUSPICIOUS: 0.9, State.CHASE: 0.5, State.RETURN: 0.55, State.SEARCH: 0.5, State.KO: 0.0,
 }
+
+@export var stays_inside := false
+@export var guard_name := "Михалыч"
 
 @export var state: int = State.WATCH
 @export var talker: String = ""
@@ -66,7 +69,7 @@ func _ready() -> void:
 # ------------------------------------------------------------ для игроков (E / G)
 
 func display_name() -> String:
-	return "Михалыч"
+	return guard_name
 
 
 func get_prompt(_player: Node) -> String:
@@ -101,6 +104,8 @@ func gift(_player: Node) -> void:
 ## Шанс, что заметит кражу.
 func spot_chance(count: int, bulky: bool, drunk: float, value: int = 0) -> float:
 	var c: float = SPOT_CHANCE.get(state, 0.5)
+	if stays_inside and shop.guard.is_chasing() and state in [State.WATCH, State.PHONE, State.SUSPICIOUS]:
+		c = maxf(c, 0.9)
 	c += 0.05 * (count - 1) + (0.3 if bulky else 0.0) + drunk * 0.002 + clampf(value / 4000.0, 0.0, 0.15)
 	# Ночью Михалыч клюёт носом.
 	var dc := get_tree().get_first_node_in_group("day_cycle") as DayCycle
@@ -110,15 +115,29 @@ func spot_chance(count: int, bulky: bool, drunk: float, value: int = 0) -> float
 
 
 func start_chase(peer: int, reason: int, value: int = 0) -> void:
+	if stays_inside:
+		var target := _player_node(peer)
+		if reason == 0 or target == null or not shop.is_inside(target.global_position):
+			state = State.SUSPICIOUS
+			_timer = 18.0
+			return
 	if reason == 0:
 		var police := get_tree().get_first_node_in_group("police")
 		if police:
-			police.report(peer, "кража в «Шестёрочке»")
+			police.report(peer, "кража в «%s»" % shop.shop_title)
+	if not stays_inside:
+		shop.sentry.cover_post()
 	state = State.CHASE
 	_target_peer = peer
 	_chase_reason = reason
 	_chase_value = value
 	_chase_time = 0.0
+
+
+func cover_post() -> void:
+	if state in [State.WATCH, State.PHONE, State.DOZE, State.SUSPICIOUS]:
+		state = State.WATCH
+		_timer = 3.0
 
 
 func is_chasing() -> bool:
@@ -158,16 +177,16 @@ func on_melee_hit(by: int, damage: float) -> void:
 
 
 func _knock_out(by: int) -> void:
-	var was_chasing_thief := state == State.CHASE and _chase_reason == 0
+	var was_chasing_thief := is_chasing() and _chase_reason == 0
 	state = State.KO
 	_timer = KO_TIME
 	hp = 0.0
 	if was_chasing_thief:
 		shop.send_result(_target_peer, ShopController.Result.ESCAPED)
-	shop.announce_all("%s вырубил Михалыча! «Шестёрочка» закрыта" % Net.peer_names.get(by, "Кто-то"))
+	shop.announce_all("%s вырубил %s! %s" % [Net.peer_names.get(by, "Кто-то"), guard_name, "Магазин закрыт" if shop.is_closed() else "Напарник остаётся на посту"])
 	var combat := get_tree().get_first_node_in_group("combat")
 	if combat:
-		combat.report_knockout(by, "Михалыч в нокауте!")
+		combat.report_knockout(by, "%s в нокауте!" % guard_name)
 
 
 ## Новый день — очухался.
@@ -196,7 +215,7 @@ func srv_drink(strength: float, pname: String) -> void:
 		return
 	state = State.DOZE
 	_timer = 10.0 + strength * 0.8
-	shop.announce_all("%s угостил охранника. Михалыч закемарил…" % pname)
+	shop.announce_all("%s угостил охранника. %s закемарил…" % [pname, guard_name])
 
 
 ## Бутылкой в охранника — плохая идея.
@@ -243,6 +262,8 @@ func _physics_process(delta: float) -> void:
 			var target := _player_node(_target_peer)
 			if target == null:
 				state = State.RETURN
+			elif stays_inside and not shop.is_inside(target.global_position):
+				_end_chase(false)
 			elif target.hidden:
 				var dist := global_position.distance_to(target.global_position)
 				if dist < SEE_HIDE_DISTANCE and _chase_reason != 2:
@@ -295,7 +316,7 @@ func _physics_process(delta: float) -> void:
 				hp = MAX_HP
 				state = State.RETURN
 				_return_time = 0.0
-				shop.announce_all("Михалыч очухался. «Шестёрочка» снова работает")
+				shop.announce_all("%s очухался и возвращается на пост" % guard_name)
 		State.RETURN:
 			var post := shop.to_global(_post)
 			goal = _route_to(post)
@@ -320,10 +341,19 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
+	if stays_inside:
+		var next := shop.to_local(global_position + Vector3(velocity.x, 0, velocity.z) * delta)
+		if absf(next.x) > ShopController.HALF.x - 0.5 or absf(next.z) > ShopController.HALF.y - 0.65:
+			velocity.x = 0
+			velocity.z = 0
 	NpcMotion.move(self, delta)
 
 
 func _next_idle_state() -> void:
+	if stays_inside and shop.guard.is_chasing():
+		state = State.WATCH
+		_timer = 3.0
+		return
 	var r := _rng.randf()
 	if r < 0.45:
 		state = State.WATCH
@@ -345,7 +375,7 @@ func _end_chase(caught: bool) -> void:
 		result = R.HIT_BUSTED if caught else R.HIT_ESCAPED
 	shop.send_result(_target_peer, result)
 	var pname: String = Net.peer_names.get(_target_peer, "вор")
-	shop.announce_all("Михалыч поймал %s!" % pname if caught else "%s удрал от охранника!" % pname)
+	shop.announce_all("%s поймал %s!" % [guard_name, pname] if caught else "%s удрал от охранника!" % pname)
 	state = State.RETURN
 	_return_time = 0.0
 
@@ -497,4 +527,6 @@ func _update_visual() -> void:
 		else:
 			label.text = "СТОЯТЬ!!!"
 	_punch_t = maxf(_punch_t - get_physics_process_delta_time(), 0.0)
+	if stays_inside and state == State.WATCH:
+		label.text = "%s · охраняет магазин" % guard_name
 	label.modulate = Color.TOMATO if state == State.CHASE or state == State.SEARCH else Color(1, 1, 1, 0.85)

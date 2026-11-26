@@ -6,7 +6,7 @@ const STEP := 2.0   ## градусов на кусок дороги
 
 ## Двери построек (локально): x, z, ширина тропинки.
 const DOORS := {"house": [0.0, 3.5, 1.4], "liquor": [-2.0, 3.0, 1.4], "casino": [0.0, 7.0, 2.6],
-	"shop": [0.0, 5.5, 3.0], "thimbles": [0.0, 1.6, 1.2]}
+	"shop": [0.0, 5.5, 3.0], "shop_premium": [0.0, 5.5, 3.0], "thimbles": [0.0, 1.6, 1.2]}
 
 
 func _ready() -> void:
@@ -27,7 +27,7 @@ func _ready() -> void:
 		var mat: Material = dirt
 		if k == "casino":
 			mat = Art.color(Color(0.55, 0.1, 0.12), 0.9)
-		elif k == "shop":
+		elif k in ["shop", "shop_premium"]:
 			mat = Art.tex_world("asphalt", 0.4)
 		_path(door, _road_edge_toward(door), d[2], mat)
 	for phi in [140.0, -140.0]:
@@ -57,7 +57,9 @@ func _road_edge_toward(p: Vector3) -> Vector3:
 		if d < bd:
 			bd = d
 			best = float(i - 180)
-	return Layout.ring(best, Layout.ROAD_W / 2 - 0.2)
+	var outward := Layout.normal(best)
+	var side := 1.0 if (p - Layout.ring(best)).dot(outward) >= 0 else -1.0
+	return Layout.ring(best, side * (Layout.ROAD_W / 2 - 0.2))
 
 
 func _road() -> void:

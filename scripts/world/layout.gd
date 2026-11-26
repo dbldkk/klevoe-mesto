@@ -16,6 +16,7 @@ const SPOTS := {
 	"casino": [28.0, 13.5, 11.0, 8.0],
 	"bus_stop": [-46.0, 6.4, 2.5, 1.5],
 	"shop": [-22.0, 11.5, 15.5, 7.0],
+	"shop_premium": [-22.0, -11.5, 8.6, 6.0],
 	"thimbles": [62.0, 6.0, 2.0, 2.0],
 	"garage": [88.0, 8.0, 2.6, 3.2],
 	"police": [-130.0, 9.5, 4.5, 4.0],
@@ -82,7 +83,7 @@ static func _spots_inv() -> Array:
 
 static func xform(spot: String) -> Transform3D:
 	var s: Array = SPOTS[spot]
-	return Transform3D(Basis(Vector3.UP, face_in_yaw(s[0])), ring(s[0], s[1]))
+	return Transform3D(Basis(Vector3.UP, face_in_yaw(s[0]) + (PI if spot == "shop_premium" else 0.0)), ring(s[0], s[1]))
 
 
 ## Точка в локальных координатах постройки → мир.

@@ -10,26 +10,60 @@ const HIT_FINE := 150
 ## Внутренняя часть магазина (локальные координаты).
 const HALF := Vector2(7.8, 5.3)
 
+@export var spot_key := "shop"
+@export var shop_title := "Шестёрочка"
+@export var price_multiplier := 1.0
+
 @onready var guard: Guard = $Guard
+@onready var sentry: Guard = $Guard2
 
 var _was_inside := false
 var _rng := RandomNumberGenerator.new()
 
 
 func _enter_tree() -> void:
-	transform = Layout.xform("shop")
+	transform = Layout.xform(spot_key)
 
 
 func _ready() -> void:
 	add_to_group("poi")
-	set_meta("poi_name", "«Шестёрочка»")
+	set_meta("poi_name", "«%s»" % shop_title)
 	add_to_group("shop")
 	_rng.randomize()
+	# Видимые рамки и камера объясняют более строгую проверку на выходе.
+	var metal := Art.color(Color(0.18, 0.22, 0.25))
+	for x in [-1.3, 1.3]:
+		Build.block(self, Vector3(x, 0.95, 4.75), Vector3(0.1, 1.9, 0.18), metal, false)
+	Build.block(self, Vector3(2.0, 2.7, 4.8), Vector3(0.25, 0.2, 0.4), metal, false)
+	Build.text(self, Vector3(0, 2.63, 5.76), "ВИДЕОНАБЛЮДЕНИЕ · 2 ОХРАННИКА", 22, Color.GOLD, 0.003)
 
 
-## Михалыч в нокауте — магазин не работает.
+## Магазин закрывается, только если оба охранника выведены из строя.
 func is_closed() -> bool:
-	return guard.is_out()
+	return guard.is_out() and sentry.is_out()
+
+
+func price_of(kind: String, id: StringName) -> int:
+	return ceili(GameData.item_price(kind, id) * price_multiplier)
+
+
+func guards() -> Array[Guard]:
+	return [guard, sentry]
+
+
+func responder() -> Guard:
+	for officer in guards():
+		if not officer.stays_inside and not officer.is_out() and not officer.is_chasing() and is_inside(officer.global_position):
+			return officer
+	return null
+
+
+func detection_chance(count: int, bulky: bool, drunk: float, value: int = 0) -> float:
+	var missed := 1.0
+	for officer in guards():
+		if not officer.is_out() and not officer.is_chasing() and is_inside(officer.global_position):
+			missed *= 1.0 - officer.spot_chance(count, bulky, drunk, value)
+	return 1.0 - missed
 
 
 func is_inside(p: Vector3) -> bool:
@@ -44,7 +78,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	var inside := is_inside(p.global_position)
 	if _was_inside and not inside and not Inventory.cart.is_empty() \
-			and Inventory.theft == Inventory.Theft.NONE:
+			and Inventory.theft == Inventory.Theft.NONE and Inventory.cart_matches(spot_key):
 		Inventory.theft = Inventory.Theft.CHECKING
 		Inventory.theft_value = Inventory.cart_total()
 		NetUtil.call_server(self, "srv_theft", [Inventory.cart.size(), Inventory.cart_bulky(),
@@ -57,11 +91,20 @@ func srv_theft(count: int, bulky: bool, drunk: float, pname: String, value: int 
 	if not multiplayer.is_server():
 		return
 	var peer := NetUtil.sender(self)
-	if not guard.is_chasing() and not guard.is_out() and _rng.randf() < guard.spot_chance(count, bulky, drunk, value):
-		guard.start_chase(peer, 0, value)
-		send_result(peer, Result.SPOTTED)
-		var extra := " С таким грузом далеко не убежишь!" if value > 1000 else ""
-		announce_all("Охранник погнался за %s!%s" % [pname, extra])
+	for officer in guards():
+		if officer.is_chasing() and officer._target_peer == peer and officer._chase_reason == 0:
+			send_result(peer, Result.SPOTTED)
+			return
+	if _rng.randf() < detection_chance(clampi(count, 1, Inventory.MAX_CART), bulky, clampf(drunk, 0, 100), maxi(value, 0)):
+		var runner := responder()
+		if runner:
+			runner.start_chase(peer, 0, value)
+			send_result(peer, Result.SPOTTED)
+			announce_all("%s: %s погнался за %s, второй охранник остаётся на посту!" % [shop_title, runner.guard_name, pname])
+		else:
+			# Дежурный перехватывает товар на выходе, не бросая магазин.
+			send_result(peer, Result.BUSTED)
+			announce_all("%s: дежурный охранник остановил %s на выходе" % [shop_title, pname])
 	else:
 		send_result(peer, Result.CLEAN)
 
@@ -76,9 +119,10 @@ func srv_mess(pname: String) -> void:
 	if not multiplayer.is_server():
 		return
 	var peer := NetUtil.sender(self)
-	announce_all("%s нагадил прямо в «Шестёрочке»! Михалыч в бешенстве" % pname)
-	if not guard.is_chasing():
-		guard.start_chase(peer, 1)
+	announce_all("%s нагадил прямо в «%s»! Охрана в бешенстве" % [pname, shop_title])
+	var runner := responder()
+	if runner:
+		runner.start_chase(peer, 1)
 		send_result(peer, Result.HIT_SPOTTED)
 
 
@@ -88,13 +132,16 @@ func send_result(peer: int, result: int) -> void:
 
 @rpc("authority", "reliable")
 func theft_result(result: int) -> void:
+	if result in [Result.CLEAN, Result.SPOTTED, Result.BUSTED, Result.ESCAPED]:
+		if Inventory.cart.is_empty() or not Inventory.cart_matches(spot_key):
+			return
 	match result:
 		Result.CLEAN:
 			Inventory.claim_cart()
 			Events.notify("Вынес незаметно. Охранник ничего не понял", Color.GOLD)
 		Result.SPOTTED:
 			Inventory.theft = Inventory.Theft.CHASED
-			Events.notify("Михалыч: «А НУ СТОЯТЬ!» — БЕГИ!", Color.RED)
+			Events.notify("Охрана: «А НУ СТОЯТЬ!» — БЕГИ!", Color.RED)
 		Result.BUSTED:
 			var paid := Inventory.confiscate_cart(THEFT_FINE)
 			Events.notify("Поймали! Товар отобрали, штраф %d ₽" % paid, Color.RED)

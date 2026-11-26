@@ -43,7 +43,7 @@ func _ready() -> void:
 	add_child(shape)
 
 	var name_txt := GameData.item_name(kind, item_id)
-	var price_txt := "%d ₽" % GameData.item_price(kind, item_id)
+	var price_txt := "%d ₽" % price()
 	var pack := Inventory.pack_of(kind, item_id)
 	if pack > 1:
 		price_txt += "  ×%d" % pack
@@ -80,6 +80,11 @@ func _label(txt: String, pos: Vector3, size: int, width: float) -> void:
 	add_child(l)
 
 
+func price() -> int:
+	var sh := _shop()
+	return sh.price_of(kind, item_id) if sh is ShopController else GameData.item_price(kind, item_id)
+
+
 func _shop() -> Node:
 	var p := get_parent()
 	return p if p and p.has_method("is_closed") else null
@@ -88,12 +93,12 @@ func _shop() -> Node:
 func get_prompt(_player: Node) -> String:
 	var sh := _shop()
 	if sh and sh.is_closed():
-		return "Магазин закрыт — Михалыч в отключке"
+		return "Магазин закрыт — охрана в отключке"
 	var extra := ""
 	var pack := Inventory.pack_of(kind, item_id)
 	if pack > 1:
 		extra = " (×%d)" % pack
-	return "Взять: %s%s — %d ₽" % [GameData.item_name(kind, item_id), extra, GameData.item_price(kind, item_id)]
+	return "Взять: %s%s — %d ₽" % [GameData.item_name(kind, item_id), extra, price()]
 
 
 func interact(_player: Node) -> void:
@@ -101,4 +106,4 @@ func interact(_player: Node) -> void:
 	if sh and sh.is_closed():
 		Events.notify("Зина: «Закрыто! Охранника вырубили, полицию вызвала!»", Color.TOMATO)
 		return
-	Inventory.add_to_cart(kind, item_id)
+	Inventory.add_to_cart(kind, item_id, price(), sh.spot_key if sh is ShopController else "")

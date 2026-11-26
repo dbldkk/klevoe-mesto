@@ -38,24 +38,32 @@ func _begin() -> void:
 		Saves.delete_world(world_id)
 		check(Saves.create_world(world_id) == "", "host creates isolated world")
 		Saves.set_section("nets", {"list": [["QA Host", 0.0, 0.0, [["perch", 1.0]]]]})
-		check(Net.host(18778) == OK, "host listens on test port")
+		check(Net.host(18931) == OK, "host listens on test port")
 		get_tree().get_first_node_in_group("village_mayhem").show_pollution(Vector3(0,Terrain.WATER_Y,-31),75)
 		Net.player_registered.connect(func(peer: int,_data: Dictionary) -> void:
 			if peer!=1:
 				var goose := get_tree().get_first_node_in_group("goose")
 				goose.set_physics_process(false)
 				goose.global_position = NpcMotion.safe_point(Layout.spawn()+Vector3(3,0,0))
-				goose.target_peer = peer)
+				goose.target_peer = peer
+				for key in ["Shop","ShopPremium"]:
+					var store: ShopController = get_tree().root.get_node("World/"+key)
+					store._rng.seed=42
+					store.guard.set_physics_process(false)
+					store.guard.state=Guard.State.CHASE
+					store.guard._target_peer=1
+					store.sentry.cover_post()
+					store.sentry._timer=600)
 		print("HOST_READY")
 	else:
-		check(Net.join("127.0.0.1", 18778) == OK, "client starts connection")
+		check(Net.join("127.0.0.1", 18931) == OK, "client starts connection")
 
 
 func _process(_delta: float) -> void:
 	if started == 0 or done:
 		return
 	var elapsed := Time.get_ticks_msec() - started
-	if elapsed > 55000:
+	if elapsed > 90000:
 		check(false, "co-op test timed out")
 		_finish()
 		return
@@ -90,6 +98,8 @@ func _process(_delta: float) -> void:
 			check(get_tree().get_first_node_in_group("goose")!=null,"client has synchronized goose")
 			check(goose.global_position.distance_to(NpcMotion.safe_point(Layout.spawn()+Vector3(3,0,0)))<0.5,"client receives goose position and target from server")
 			check(get_tree().get_first_node_in_group("village_mayhem").patches.size()==1,"late client receives active water pollution")
+			client_stage = -1
+			await _test_shop_security(p)
 			Inventory.money = 1234
 			Inventory.blindness = 1.0
 			Net.send_snapshot()
@@ -109,7 +119,7 @@ func _process(_delta: float) -> void:
 			await get_tree().process_frame
 			nets = get_tree().get_first_node_in_group("nets")
 			client_stage = 3
-			check(Net.join("127.0.0.1", 18778) == OK, "client reconnects")
+			check(Net.join("127.0.0.1", 18931) == OK, "client reconnects")
 		elif client_stage == 3 and p:
 			client_stage = 4
 			check(Inventory.money == 1234, "client receives saved inventory on reconnect")
@@ -128,3 +138,21 @@ func _finish() -> void:
 		Saves.delete_world(world_id)
 	print("COOP_RESULT: " + ("FAIL" if failed else "PASS"))
 	get_tree().quit(1 if failed else 0)
+
+
+func _test_shop_security(p: Node3D) -> void:
+	for key in ["Shop","ShopPremium"]:
+		var store:ShopController=get_tree().root.get_node("World/"+key)
+		check(store.guard.state==Guard.State.CHASE,"client receives mobile guard chase in "+key)
+		check(store.is_inside(store.sentry.global_position),"client sees sentry at post in "+key)
+		Inventory.cart.clear()
+		Inventory.theft=Inventory.Theft.NONE
+		Inventory.money=2000
+		p.global_position=store.to_global(Vector3(0,0.2,3))
+		Inventory.add_to_cart("drink",&"beer",store.price_of("drink",&"beer"),store.spot_key)
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		p.global_position=store.to_global(Vector3(0,0.2,7))
+		await get_tree().create_timer(0.8).timeout
+		check(Inventory.cart.is_empty() and Inventory.money==1700,"server sentry intercepts second thief while partner pursues first in "+key)
+		check(store.guard.state==Guard.State.CHASE and store.is_inside(store.sentry.global_position),"both guard roles preserved on client in "+key)

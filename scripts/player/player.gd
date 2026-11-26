@@ -1086,7 +1086,11 @@ func _in_outhouse() -> bool:
 
 func _finish_toilet(what: String, accident: bool) -> void:
 	var mess := get_tree().get_first_node_in_group("mess")
-	var shop := get_tree().get_first_node_in_group("shop") as ShopController
+	var shop: ShopController
+	for store in get_tree().get_nodes_in_group("shop"):
+		if store.is_inside(global_position):
+			shop = store
+			break
 	var clean := _in_outhouse() and not accident
 	if what == "pee":
 		Inventory.bladder = 0.0
@@ -1999,6 +2003,7 @@ func _physics_process(delta: float) -> void:
 				_lurch_timer = randf_range(1.5, 4.0)
 				velocity += global_basis.x * randf_range(-1.0, 1.0) * 4.0 * d
 
+	ShoreMovement.assist(self, dir)
 	var was_air := not is_on_floor()
 	var fall_speed := -velocity.y
 	move_and_slide()
@@ -2029,7 +2034,7 @@ func _update_swimming() -> void:
 			stinky = 0.0
 			Events.notify("Плюх! Заодно и помылся", Color(0.6, 0.85, 1.0))
 		else:
-			Events.notify("Плюх! Плыви к пологому берегу или к лестнице у пирса (Пробел — вылезти)",
+			Events.notify("Плюх! Плыви к любому берегу — персонаж выберется сам. Пробел — помочь себе",
 				Color(0.6, 0.85, 1.0))
 	elif swimming and not deep:
 		swimming = false
