@@ -13,6 +13,9 @@ uniform vec3 horizon_color : source_color = vec3(0.75, 0.84, 0.92);
 uniform sampler2D n1 : hint_normal, repeat_enable, filter_linear_mipmap;
 uniform sampler2D n2 : hint_normal, repeat_enable, filter_linear_mipmap;
 uniform sampler2D depth_tex : hint_depth_texture, filter_linear;
+uniform sampler2D water_mask : filter_linear, repeat_disable;
+uniform vec2 mask_origin;
+uniform vec2 mask_size;
 uniform float wave_amp = 0.07;
 varying vec3 wpos;
 void vertex() {
@@ -22,6 +25,10 @@ void vertex() {
 		+ sin((wpos.x + wpos.z) * 1.1 + TIME * 1.7) * wave_amp * 0.35;
 }
 void fragment() {
+	vec2 mask_uv = (wpos.xz - mask_origin + vec2(0.5)) / mask_size;
+	if (texture(water_mask, mask_uv).r < 0.5) {
+		discard;
+	}
 	vec2 uv = wpos.xz * 0.065;
 	vec3 a = texture(n1, uv + TIME * vec2(0.02, 0.013)).rgb;
 	vec3 b = texture(n2, uv * 1.8 - TIME * vec2(0.016, 0.024)).rgb;
@@ -72,6 +79,10 @@ func _ready() -> void:
 	sh.code = SHADER
 	_mat = ShaderMaterial.new()
 	_mat.shader = sh
+	var terrain := get_parent().get_node("Terrain") as Terrain
+	_mat.set_shader_parameter("water_mask", terrain.build_water_mask())
+	_mat.set_shader_parameter("mask_origin", Vector2(Terrain.X0, Terrain.Z0))
+	_mat.set_shader_parameter("mask_size", Vector2(Terrain.X1 - Terrain.X0 + 1, Terrain.Z1 - Terrain.Z0 + 1))
 	_mat.set_shader_parameter("n1", _normal_tex(0.02, 11))
 	_mat.set_shader_parameter("n2", _normal_tex(0.045, 29))
 	material_override = _mat

@@ -1,7 +1,7 @@
-# Клёвое место — кооперативная рыбалка (v1.3.4, Godot 4.7.2)
+# Клёвое место — кооперативная рыбалка (v1.3.5, Godot 4.7.2)
 
 ## Запуск
-**Готовая Windows-игра:** скачай архив Windows из [релиза v1.3.4](https://github.com/dbldkk/klevoe-mesto/releases/tag/v1.3.4),
+**Готовая Windows-игра:** скачай архив Windows из [релиза v1.3.5](https://github.com/dbldkk/klevoe-mesto/releases/tag/v1.3.5),
 распакуй и запусти `KlevoeMesto.exe`. Собирать части архива больше не нужно.
 EXE распространяется через Releases; в Git хранятся исходники.
 В Windows игра по умолчанию запускается в Vulkan. Для запуска с OpenGL используй `Play-Compatibility.bat`.

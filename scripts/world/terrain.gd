@@ -214,6 +214,17 @@ func _build_collision() -> void:
 	add_child(col)
 
 
+## Маска использует те же отсчёты высот, что и физический рельеф.
+func build_water_mask() -> ImageTexture:
+	var width := X1 - X0 + 1
+	var depth := Z1 - Z0 + 1
+	var pixels := PackedByteArray()
+	pixels.resize(_hs.size())
+	for i in _hs.size():
+		pixels[i] = roundi(clampf(0.5 + WATER_Y - _hs[i], 0.0, 1.0) * 255.0)
+	return ImageTexture.create_from_image(Image.create_from_data(width, depth, false, Image.FORMAT_R8, pixels))
+
+
 func _build_mesh() -> void:
 	var n := X1 - X0 + 1
 	var nz := Z1 - Z0 + 1
