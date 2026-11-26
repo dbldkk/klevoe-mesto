@@ -1,0 +1,58 @@
+name: Package Windows v1.3.4
+on:
+  push:
+    branches: [release-build/v1.3.4]
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: v1.3.4
+          persist-credentials: false
+      - name: Export and check the Windows package
+        shell: bash
+        run: |
+          ver=4.7.2-stable
+          base="https://github.com/godotengine/godot-builds/releases/download/$ver"
+          curl -fL --retry 3 "$base/Godot_v${ver}_linux.x86_64.zip" -o "$RUNNER_TEMP/godot.zip"
+          curl -fL --retry 3 "$base/Godot_v${ver}_export_templates.tpz" -o "$RUNNER_TEMP/templates.tpz"
+          mkdir -p "$RUNNER_TEMP/godot" "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          unzip -q -j "$RUNNER_TEMP/templates.tpz" 'templates/windows_release_x86_64.exe' -d "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          engine="$RUNNER_TEMP/godot/Godot_v${ver}_linux.x86_64"
+          chmod +x "$engine"
+          "$engine" --headless --editor --import --quit
+          "$engine" --headless --export-release 'Windows Desktop' "$PWD/build/KlevoeMesto.exe"
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          exe = Path('build/KlevoeMesto.exe')
+          with exe.open('rb') as f:
+              assert f.read(2) == b'MZ'
+          assert exe.stat().st_size > 100_000_000
+          path = 'KlevoeMesto-1.3.4-Windows.zip'
+          with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
+              z.write(exe, exe.name)
+              z.write('build/Play-Compatibility.bat', 'Play-Compatibility.bat')
+              z.write('build/Play-Vulkan.bat', 'Play-Vulkan.bat')
+              z.writestr('README.txt', 'Extract all files and run KlevoeMesto.exe. Vulkan is the default. For OpenGL, run Play-Compatibility.bat.\r\n')
+          with zipfile.ZipFile(path) as z:
+              assert z.testzip() is None and 'KlevoeMesto.exe' in z.namelist()
+          PY
+      - name: Attach Windows archive to release
+        shell: bash
+        run: |
+          asset=KlevoeMesto-1.3.4-Windows.zip
+          has_asset() {
+            gh api repos/"$GITHUB_REPOSITORY"/releases/459829448 --jq '.assets[] | select(.name == "KlevoeMesto-1.3.4-Windows.zip" and .state == "uploaded") | .name' | grep -Fxq "$asset"
+          }
+          has_asset || gh release upload v1.3.4 "$asset" || has_asset
+
+
+
